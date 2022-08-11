@@ -5,6 +5,9 @@
 ```shell
 cargo build
 # check output in /target/debug/authenticator
+
+# view usage
+cargo run help
 ```
 
 ## Usage
