@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/avareum/avareum-hubble-signer/internal/signers/signer"
+	"github.com/avareum/avareum-hubble-signer/internal/signers"
 	"github.com/avareum/avareum-hubble-signer/internal/signers/types"
 	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
@@ -15,7 +15,7 @@ import (
 )
 
 type SolanaSigner struct {
-	signer.BaseSigner
+	signers.BaseSigner
 	opt       SolanaSignerOptions
 	rpcclient *rpc.Client
 	wsclient  *ws.Client
@@ -40,8 +40,8 @@ func (s *SolanaSigner) ID() string {
 	return "solana.mainnet-beta"
 }
 
+// Init create a new rpc & websocket client (used for confirming transactions)
 func (s *SolanaSigner) Init() error {
-	// create a new rpc & websocket client (used for confirming transactions)
 	rpcClient := rpc.New(s.opt.RPC)
 	wsClient, err := ws.Connect(context.Background(), s.opt.Websocket)
 	if err != nil {
@@ -91,29 +91,21 @@ func (s *SolanaSigner) sign(tx *solana.Transaction, account solana.PrivateKey) (
 }
 
 func (s *SolanaSigner) SignAndBroadcast(req types.SignerRequest) ([]string, error) {
-	// fetch key from secret manager
 	signerAccount, err := s.parseSignerKey()
 	if err != nil {
 		return nil, err
 	}
-
-	// decode & validate tx from data
 	tx, err := s.decodeTx(req.Payload)
 	if err != nil {
 		return nil, err
 	}
-
-	// sign tx using secret signer
 	_, err = s.sign(tx, signerAccount)
 	if err != nil {
 		return nil, err
 	}
-
-	// broadcast tx
 	signature, err := confirm.SendAndConfirmTransaction(context.TODO(), s.rpcclient, s.wsclient, tx)
 	if err != nil {
 		return nil, err
 	}
-
 	return []string{signature.String()}, err
 }

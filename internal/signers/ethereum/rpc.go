@@ -1,7 +1,7 @@
 package ethereum
 
 import (
-	"github.com/avareum/avareum-hubble-signer/internal/signers/signer"
+	"github.com/avareum/avareum-hubble-signer/internal/signers"
 	"github.com/avareum/avareum-hubble-signer/internal/signers/types"
 )
 
@@ -13,7 +13,7 @@ type EthereumSignerOptions struct {
 var _ types.Signer = &EthereumSigner{}
 
 type EthereumSigner struct {
-	signer.BaseSigner
+	signers.BaseSigner
 	opt EthereumSignerOptions
 }
 
