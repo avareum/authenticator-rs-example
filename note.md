@@ -1,7 +1,14 @@
 # TODO:
 
-- [] create tx mockup which signed by `signers/3`
-- [] create payload & signature mockup which signed by mock `caller`
-- [] initiate message queue connection
-- [] receive & parse request from message queue to SignerRequest
-- [] publish on-chain signature
+- [x] create tx mockup which signed by `secrets/signer.{fund-pub}/version/latest`
+- [x] create payload & signature mockup which signed by mock `service-caller`
+- [x] initiate message queue connection
+- [x] receive & parse request from message queue to SignerRequest
+- [x] publish on-chain signature
+- [] SignerApp unit tests
+- [] ACL unit tests
+- [] Solana signer unit tests
+- [] integrate with GCP pubsub
+- [] GCP cloud log (hook from `SignerRequestedResponseHandler`)
+- [] implement Fund wallet creation APIs (mq features)
+- [] implement Ethereum signer
