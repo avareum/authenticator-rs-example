@@ -98,6 +98,9 @@ func (w *ServiceACL) Verify(pub ed25519.PublicKey, payload []byte, payloadSignat
 
 func (w *ServiceACL) CanCall(serviceName string, payload []byte, payloadSignature []byte) bool {
 	pubBytes := w.GetPublicKey(serviceName)
+	if len(pubBytes) == 0 {
+		return false
+	}
 	pub := solana.PublicKeyFromBytes(pubBytes)
 	return w.Verify(pub[:], payload, payloadSignature)
 }

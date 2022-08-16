@@ -11,7 +11,7 @@ type TestSecretManager struct {
 	keystores map[string][]byte
 }
 
-func NewTestSecretManager() types.SecretManager {
+func NewTestSecretManager() *TestSecretManager {
 	return &TestSecretManager{
 		keystores: make(map[string][]byte),
 	}

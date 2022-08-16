@@ -3,11 +3,10 @@ package solana
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/test-go/testify/require"
 )
 
 func Test_Base64ToTransaction(t *testing.T) {
-	assert := assert.New(t)
 	/*
 		Program id: uvrXzrjzPv7cAsjgnZy3hmMUnff2KiKaJpj8Ab3ffny
 		Data:{
@@ -39,20 +38,20 @@ func Test_Base64ToTransaction(t *testing.T) {
 
 	t.Run("should extract program signature", func(t *testing.T) {
 		tx, err := Base64ToTransaction(bytecode)
-		assert.Nil(err)
-		assert.NotNil(tx)
+		require.Nil(t, err)
+		require.NotNil(t, tx)
 	})
 
 	t.Run("should get program id #0", func(t *testing.T) {
 		tx, _ := Base64ToTransaction(bytecode)
 		programID, err := ProgramID(*tx, 0)
-		assert.Nil(err)
-		assert.Equal("uvrXzrjzPv7cAsjgnZy3hmMUnff2KiKaJpj8Ab3ffny", programID.String())
+		require.Nil(t, err)
+		require.Equal(t, "uvrXzrjzPv7cAsjgnZy3hmMUnff2KiKaJpj8Ab3ffny", programID.String())
 	})
 
 	t.Run("should reject invalid program idx", func(t *testing.T) {
 		tx, _ := Base64ToTransaction(bytecode)
 		_, err := ProgramID(*tx, 1)
-		assert.EqualError(err, "invalid program index")
+		require.EqualError(t, err, "invalid program index")
 	})
 }

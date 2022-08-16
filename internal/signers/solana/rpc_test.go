@@ -8,7 +8,7 @@ import (
 	"github.com/avareum/avareum-hubble-signer/tests/fixtures"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/system"
-	"github.com/stretchr/testify/assert"
+	"github.com/test-go/testify/require"
 )
 
 func NewTestSigner() *SolanaSigner {
@@ -23,8 +23,6 @@ var suite = fixtures.NewTestSuite()
 var signer = NewTestSigner()
 
 func Test_SignerDecoder(t *testing.T) {
-	assert := assert.New(t)
-
 	t.Run("should decode tx", func(t *testing.T) {
 		receiver := solana.NewWallet()
 		originalTx := suite.Solana.NewTx(system.NewTransferInstruction(
@@ -35,30 +33,30 @@ func Test_SignerDecoder(t *testing.T) {
 
 		t.Run("should decode transfer tx", func(t *testing.T) {
 			rawTx, err := base64.StdEncoding.DecodeString(originalTx.Message.ToBase64())
-			assert.Nil(err)
+			require.Nil(t, err)
 
 			decodedTx, err := signer.decode(context.TODO(), rawTx)
-			assert.Nil(err)
+			require.Nil(t, err)
 
 			t.Run("should contain transfer instruction", func(t *testing.T) {
-				assert.Equal(1, len(decodedTx.Message.Instructions))
+				require.Equal(t, 1, len(decodedTx.Message.Instructions))
 			})
 
 			t.Run("should contain transfer accounts", func(t *testing.T) {
-				assert.Equal(3, len(decodedTx.Message.AccountKeys))
+				require.Equal(t, 3, len(decodedTx.Message.AccountKeys))
 			})
 
 			t.Run("should contain system account (transfer SOL)", func(t *testing.T) {
 				program, err := decodedTx.ResolveProgramIDIndex(decodedTx.Message.Instructions[0].ProgramIDIndex)
-				assert.Nil(err)
-				assert.Equal("11111111111111111111111111111111", program.String())
+				require.Nil(t, err)
+				require.Equal(t, "11111111111111111111111111111111", program.String())
 			})
 
 			t.Run("should sign relay tx", func(t *testing.T) {
 				signatures, err := signer.sign(context.TODO(), decodedTx, suite.Solana.Fund.PrivateKey)
-				assert.Nil(err)
-				assert.Nil(decodedTx.VerifySignatures())
-				assert.Equal(1, len(signatures))
+				require.Nil(t, err)
+				require.Nil(t, decodedTx.VerifySignatures())
+				require.Equal(t, 1, len(signatures))
 			})
 		})
 

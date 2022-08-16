@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/gagliardetto/solana-go"
-	"github.com/stretchr/testify/assert"
+	"github.com/test-go/testify/require"
 )
 
 type SignerTestCase struct {
@@ -16,11 +16,10 @@ type SignerTestCase struct {
 }
 
 func Test_SignatureVerification(t *testing.T) {
-	assert := assert.New(t)
 
 	t.Run("should verify signatures", func(t *testing.T) {
 		w, err := NewServiceACL()
-		assert.Nil(err)
+		require.Nil(t, err)
 		tests := []SignerTestCase{
 			{
 				signer:    "2V7t5NaKY7aGkwytCWQgvUYZfEr9XMwNChhJEakTExk6",
@@ -46,8 +45,8 @@ func Test_SignatureVerification(t *testing.T) {
 			pub := solana.MustPublicKeyFromBase58(test.signer)
 			sig := solana.MustSignatureFromBase58(test.signature)
 			msg, err := base64.StdEncoding.DecodeString(test.payload)
-			assert.Nil(err)
-			assert.Equal(w.Verify(pub[:], msg, sig[:]), test.expect)
+			require.Nil(t, err)
+			require.Equal(t, w.Verify(pub[:], msg, sig[:]), test.expect)
 		}
 	})
 

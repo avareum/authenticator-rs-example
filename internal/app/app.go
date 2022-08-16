@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	signersTypes "github.com/avareum/avareum-hubble-signer/internal/signers/types"
+	signerTypes "github.com/avareum/avareum-hubble-signer/internal/signers/types"
 	"github.com/avareum/avareum-hubble-signer/internal/types"
 	aclTypes "github.com/avareum/avareum-hubble-signer/pkg/acl/types"
 	smTypes "github.com/avareum/avareum-hubble-signer/pkg/secret_manager/types"
 )
 
 type AppSigner struct {
-	Signers    map[string]signersTypes.Signer
+	Signers    map[string]signerTypes.Signer
 	acl        aclTypes.ACL
 	sm         smTypes.SecretManager
 	reqHandler types.SignerRequestedResponseHandler
@@ -19,7 +19,7 @@ type AppSigner struct {
 
 func NewAppSigner() *AppSigner {
 	a := &AppSigner{
-		Signers: make(map[string]signersTypes.Signer),
+		Signers: make(map[string]signerTypes.Signer),
 	}
 	return a
 }
@@ -36,7 +36,7 @@ func (a *AppSigner) RegisterSignerRequestedResponseHandler(handler types.SignerR
 	a.reqHandler = handler
 }
 
-func (a *AppSigner) AddSigners(signers ...signersTypes.Signer) error {
+func (a *AppSigner) AddSigners(signers ...signerTypes.Signer) error {
 	for _, s := range signers {
 		err := s.Init()
 		if err != nil {
@@ -79,7 +79,7 @@ func (a *AppSigner) Receive(ctx context.Context, mq types.MessageQueue) error {
 			if a.acl != nil && !a.acl.CanCall(req.Caller, req.Payload, req.Signature) {
 				a.response(types.SignerRequestedResponse{
 					Request: req,
-					Error:   fmt.Errorf("caller is not whitelisted"),
+					Error:   fmt.Errorf("invalid caller signature"),
 				})
 				continue
 			}
@@ -100,7 +100,7 @@ func (a *AppSigner) Receive(ctx context.Context, mq types.MessageQueue) error {
 			} else {
 				a.response(types.SignerRequestedResponse{
 					Request: req,
-					Error:   fmt.Errorf("signer '%s' not found", req.SignerID()),
+					Error:   fmt.Errorf("signer %s not found", req.SignerID()),
 				})
 			}
 		}
