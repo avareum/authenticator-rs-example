@@ -5,7 +5,7 @@
 - [x] initiate message queue connection
 - [x] receive & parse request from message queue to SignerRequest
 - [x] publish on-chain signature
-- [ ] SignerApp unit tests
+- [x] SignerApp unit tests
 - [ ] ACL unit tests
 - [ ] Solana signer unit tests
 - [ ] integrate with GCP pubsub
