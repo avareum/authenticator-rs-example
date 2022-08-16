@@ -40,8 +40,7 @@ func Test_App(t *testing.T) {
 	app.RegisterSignerRequestedResponseHandler(reqHandler)
 
 	err := app.AddSigners(solana.NewSolanaSigner(solana.SolanaSignerOptions{
-		RPC:       "http://127.0.0.1:8899",
-		Websocket: "ws://localhost:8900",
+		RPC: "http://127.0.0.1:8899",
 	}))
 	assert.Nil(err)
 

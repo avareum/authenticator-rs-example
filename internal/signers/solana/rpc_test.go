@@ -13,8 +13,7 @@ import (
 
 func NewTestSigner() *SolanaSigner {
 	s := NewSolanaSigner(SolanaSignerOptions{
-		RPC:       "http://127.0.0.1:8899",
-		Websocket: "ws://localhost:8900",
+		RPC: "http://127.0.0.1:8899",
 	})
 	s.Init()
 	return s

@@ -103,8 +103,6 @@ func (a *AppSigner) Receive(ctx context.Context, mq types.MessageQueue) error {
 					Error:   fmt.Errorf("signer '%s' not found", req.SignerID()),
 				})
 			}
-
-			// TODO: publish broadcasted signatures
 		}
 	}
 }

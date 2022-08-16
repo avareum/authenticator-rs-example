@@ -20,8 +20,6 @@ type SolanaSigner struct {
 
 type SolanaSignerOptions struct {
 	RPC string
-	// used for confirming transactions
-	Websocket string
 }
 
 // Signer implementation checked against internal/signers/types/signer.go

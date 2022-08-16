@@ -26,8 +26,7 @@ func main() {
 			RPC: "https://rpc.ankr.com/eth",
 		}),
 		solana.NewSolanaSigner(solana.SolanaSignerOptions{
-			RPC:       "https://api.devnet.solana.com",
-			Websocket: "wss://api.devnet.solana.com",
+			RPC: "https://api.devnet.solana.com",
 		}),
 	)
 	if err != nil {
