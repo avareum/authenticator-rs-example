@@ -4,7 +4,7 @@ set -e
 # tests
 
 tests() {
-    go test ../...
+    go test -timeout 300s ./...
 }
 
 function usage {

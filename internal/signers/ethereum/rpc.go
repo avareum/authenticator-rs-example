@@ -10,7 +10,7 @@ type EthereumSignerOptions struct {
 }
 
 // Signer implementation checked against internal/signers/types/signer.go
-var _ types.Signer = &EthereumSigner{}
+var _ types.Signer = (*EthereumSigner)(nil)
 
 type EthereumSigner struct {
 	signers.BaseSigner

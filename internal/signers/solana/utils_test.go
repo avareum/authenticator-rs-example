@@ -8,7 +8,6 @@ import (
 
 func Test_Base64ToTransaction(t *testing.T) {
 	assert := assert.New(t)
-
 	/*
 		Program id: uvrXzrjzPv7cAsjgnZy3hmMUnff2KiKaJpj8Ab3ffny
 		Data:{

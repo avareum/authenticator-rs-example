@@ -3,24 +3,28 @@ package secret_manager
 import (
 	"context"
 	"fmt"
+	"os"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	"github.com/avareum/avareum-hubble-signer/pkg/secret_manager/types"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 )
 
-type SecretManager struct {
+type GCPSecretManager struct {
+	types.SecretManager
 	client *secretmanager.Client
-	cfg    SecretManagerConfig
+	cfg    GCPSecretManagerConfig
 }
 
-type SecretManagerConfig struct {
-	ProjectID  string
-	BucketName string
+type GCPSecretManagerConfig struct {
+	ProjectID string
 }
 
-func NewSecretManager(cfg SecretManagerConfig) (*SecretManager, error) {
-	sm := &SecretManager{
-		cfg: cfg,
+func NewGCPSecretManager() (types.SecretManager, error) {
+	sm := &GCPSecretManager{
+		cfg: GCPSecretManagerConfig{
+			ProjectID: os.Getenv("GCP_PROJECT"),
+		},
 	}
 	err := sm.init()
 	if err != nil {
@@ -29,18 +33,18 @@ func NewSecretManager(cfg SecretManagerConfig) (*SecretManager, error) {
 	return sm, nil
 }
 
-func (s *SecretManager) init() error {
+func (s *GCPSecretManager) init() error {
 	client, err := secretmanager.NewClient(context.TODO())
 	if err != nil {
-		return fmt.Errorf("secretmanager: NewClient: %v", err)
+		return fmt.Errorf("GCPSecretManager: new client failed: %v", err)
 	}
 	s.client = client
 	return nil
 }
 
-func (s *SecretManager) Create(id string, payload []byte) (string, error) {
+func (s *GCPSecretManager) Create(id string, payload []byte) (string, error) {
 	createSecretReq := &secretmanagerpb.CreateSecretRequest{
-		Parent:   fmt.Sprintf("projects/%s", s.cfg.ProjectID),
+		Parent:   fmt.Sprintf("projects/signer-%s", s.cfg.ProjectID),
 		SecretId: id,
 		Secret: &secretmanagerpb.Secret{
 			Replication: &secretmanagerpb.Replication{
@@ -53,7 +57,7 @@ func (s *SecretManager) Create(id string, payload []byte) (string, error) {
 
 	secret, err := s.client.CreateSecret(context.TODO(), createSecretReq)
 	if err != nil {
-		return "", fmt.Errorf("failed to create secret: %v", err)
+		return "", fmt.Errorf("GCPSecretManager: failed to create secret: %v", err)
 	}
 
 	// Build the request.
@@ -67,22 +71,22 @@ func (s *SecretManager) Create(id string, payload []byte) (string, error) {
 	// Call the API.
 	version, err := s.client.AddSecretVersion(context.TODO(), addSecretVersionReq)
 	if err != nil {
-		return "", fmt.Errorf("failed to add secret version: %v", err)
+		return "", fmt.Errorf("GCPSecretManager: failed to add secret version: %v", err)
 	}
 
 	return version.Name, nil
 }
 
-func (s *SecretManager) Get(keyVersion string) ([]byte, error) {
+func (s *GCPSecretManager) Get(id string) ([]byte, error) {
 	// Build the request.
 	accessRequest := &secretmanagerpb.AccessSecretVersionRequest{
-		Name: fmt.Sprintf("projects/%s/secrets/%s/versions/%s", s.cfg.ProjectID, s.cfg.BucketName, keyVersion),
+		Name: fmt.Sprintf("projects/%s/secrets/signer-%s/versions/latest", s.cfg.ProjectID, id),
 	}
 
 	// Call the API.
 	result, err := s.client.AccessSecretVersion(context.TODO(), accessRequest)
 	if err != nil {
-		return nil, fmt.Errorf("failed to access secret version: %v", err)
+		return nil, fmt.Errorf("GCPSecretManager: failed to access secret version: %v", err)
 	}
 
 	return result.Payload.Data, nil

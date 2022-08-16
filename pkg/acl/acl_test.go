@@ -1,11 +1,11 @@
-package whitelist
+package acl
 
 import (
 	"encoding/base64"
 	"testing"
 
 	"github.com/gagliardetto/solana-go"
-	"github.com/test-go/testify/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 type SignerTestCase struct {
@@ -19,10 +19,7 @@ func Test_SignatureVerification(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("should verify signatures", func(t *testing.T) {
-		w, err := NewWhitelist(WhitelistOptions{
-			ProjectID: "avareum-devnet",
-			Bucket:    "",
-		})
+		w, err := NewServiceACL()
 		assert.Nil(err)
 		tests := []SignerTestCase{
 			{

@@ -1,24 +1,42 @@
 package app
 
 import (
+	"context"
 	"fmt"
-	"os"
 
-	"github.com/avareum/avareum-hubble-signer/internal/signers/types"
-	"github.com/avareum/avareum-hubble-signer/pkg/whitelist"
+	signersTypes "github.com/avareum/avareum-hubble-signer/internal/signers/types"
+	"github.com/avareum/avareum-hubble-signer/internal/types"
+	aclTypes "github.com/avareum/avareum-hubble-signer/pkg/acl/types"
+	smTypes "github.com/avareum/avareum-hubble-signer/pkg/secret_manager/types"
 )
 
-type App struct {
-	Signers map[string]types.Signer
-	wl      *whitelist.Whitelist
+type AppSigner struct {
+	Signers    map[string]signersTypes.Signer
+	acl        aclTypes.ACL
+	sm         smTypes.SecretManager
+	reqHandler types.SignerRequestedResponseHandler
 }
 
-func NewApp() *App {
-	a := &App{}
+func NewAppSigner() *AppSigner {
+	a := &AppSigner{
+		Signers: make(map[string]signersTypes.Signer),
+	}
 	return a
 }
 
-func (a *App) WithSigner(signers ...types.Signer) error {
+func (a *AppSigner) RegisterSecretManager(sm smTypes.SecretManager) {
+	a.sm = sm
+}
+
+func (a *AppSigner) RegisterACL(acl aclTypes.ACL) {
+	a.acl = acl
+}
+
+func (a *AppSigner) RegisterSignerRequestedResponseHandler(handler types.SignerRequestedResponseHandler) {
+	a.reqHandler = handler
+}
+
+func (a *AppSigner) AddSigners(signers ...signersTypes.Signer) error {
 	for _, s := range signers {
 		err := s.Init()
 		if err != nil {
@@ -29,45 +47,64 @@ func (a *App) WithSigner(signers ...types.Signer) error {
 	return nil
 }
 
-func (a *App) Start() error {
-	// create whitelist checker
-	wl, err := whitelist.NewWhitelist(whitelist.WhitelistOptions{
-		ProjectID: os.Getenv("GCP_PROJECT"),
-		Bucket:    "service-whitelists",
-	})
-	if err != nil {
-		return err
+func (a *AppSigner) response(response types.SignerRequestedResponse) {
+	if a.reqHandler == nil {
+		return
 	}
-	a.wl = wl
 
-	// TODO: initiate message queue connection
-	receiver := make(chan types.SignerRequest)
+	// prevent deadlock
+	select {
+	case a.reqHandler <- response:
+	default:
+	}
+}
 
-	// Mock request
-	go func() {
-		// TODO: parse request from message queue to SignerRequest
-		receiver <- types.NewMockSignerRequest()
-	}()
+func (a *AppSigner) Receive(ctx context.Context, mq types.MessageQueue) error {
+	// register secret manager to all signer
+	if a.sm == nil {
+		panic("secret manager is not registered")
+	}
+	for _, s := range a.Signers {
+		s.WithSecretManager(a.sm)
+	}
 
+	// initiate message queue connection
+	receiver := mq.ReceiveChannel()
 	for {
-		req := <-receiver
-
-		// check if the caller is whitelisted
-		if !a.wl.CanCall(req.Caller, req.Payload, req.Signature) {
-			fmt.Println("Caller is not whitelisted")
-			continue
-		}
-
-		if signer, isExists := a.Signers[req.SignerID()]; isExists {
-			_, err := signer.SignAndBroadcast(req)
-			if err != nil {
-				fmt.Println(err)
+		select {
+		case <-ctx.Done():
+			return nil
+		case req := <-receiver:
+			// check if the caller is whitelisted
+			if a.acl != nil && !a.acl.CanCall(req.Caller, req.Payload, req.Signature) {
+				a.response(types.SignerRequestedResponse{
+					Request: req,
+					Error:   fmt.Errorf("caller is not whitelisted"),
+				})
+				continue
 			}
-		} else {
-			fmt.Println("Signer not found")
-		}
 
-		// TODO: publish broadcasted signatures
-		// TODO: ack mq
+			if signer, isExists := a.Signers[req.SignerID()]; isExists {
+				sigs, err := signer.SignAndBroadcast(ctx, req)
+				if err != nil {
+					a.response(types.SignerRequestedResponse{
+						Request: req,
+						Error:   err,
+					})
+				} else {
+					a.response(types.SignerRequestedResponse{
+						Request:    req,
+						Signatures: &sigs,
+					})
+				}
+			} else {
+				a.response(types.SignerRequestedResponse{
+					Request: req,
+					Error:   fmt.Errorf("signer '%s' not found", req.SignerID()),
+				})
+			}
+
+			// TODO: publish broadcasted signatures
+		}
 	}
 }

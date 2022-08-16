@@ -1,31 +1,31 @@
 package signers
 
 import (
-	"os"
+	"fmt"
 
 	"github.com/avareum/avareum-hubble-signer/internal/signers/types"
-	"github.com/avareum/avareum-hubble-signer/pkg/secret_manager"
+	smTypes "github.com/avareum/avareum-hubble-signer/pkg/secret_manager/types"
 )
 
-const SignerKeyVersion = "3"
+// Signer implementation checked against internal/signers/types/signer.go
+var _ types.Signer = (*BaseSigner)(nil)
 
 type BaseSigner struct {
 	types.Signer
-	sm *secret_manager.SecretManager
+	sm smTypes.SecretManager
 }
 
 func (b *BaseSigner) Init() error {
-	sm, err := secret_manager.NewSecretManager(secret_manager.SecretManagerConfig{
-		ProjectID:  os.Getenv("GCP_PROJECT"),
-		BucketName: "signers",
-	})
-	b.sm = sm
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
-func (b *BaseSigner) FetchSignerRawKey() ([]byte, error) {
-	return b.sm.Get(SignerKeyVersion)
+func (b *BaseSigner) WithSecretManager(sm smTypes.SecretManager) {
+	b.sm = sm
+}
+
+func (b *BaseSigner) FetchSignerRawKey(id string) ([]byte, error) {
+	if b.sm == nil {
+		return nil, fmt.Errorf("secret manager is not set")
+	}
+	return b.sm.Get(id)
 }
