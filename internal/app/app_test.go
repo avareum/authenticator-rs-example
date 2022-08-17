@@ -30,7 +30,7 @@ func NewTestTxPayload(suite *fixtures.TestSuite) []byte {
 func Test_App(t *testing.T) {
 
 	t.Run("should panic when missing secret manager", func(t *testing.T) {
-		suite := fixtures.NewTestSuite()
+		suite := fixtures.NewTestSuite().Faucet()
 		app := NewAppSigner()
 		require.Panics(t, func() {
 			app.Receive(context.TODO(), suite.MessageQueue)
@@ -38,7 +38,7 @@ func Test_App(t *testing.T) {
 	})
 
 	t.Run("should reject invalid request signer id", func(t *testing.T) {
-		suite := fixtures.NewTestSuite()
+		suite := fixtures.NewTestSuite().Faucet()
 
 		app := NewAppSigner()
 		app.RegisterSecretManager(suite.SecretManager)
@@ -59,7 +59,7 @@ func Test_App(t *testing.T) {
 	})
 
 	t.Run("should reject mismatch service caller", func(t *testing.T) {
-		suite := fixtures.NewTestSuite()
+		suite := fixtures.NewTestSuite().Faucet()
 		suite.ACL.CreateTestServiceKey("caller-service")
 		suite.ACL.CreateTestServiceKey("unauthorize-service")
 
@@ -88,7 +88,7 @@ func Test_App(t *testing.T) {
 	})
 
 	t.Run("should sign & broadcast valid request", func(t *testing.T) {
-		suite := fixtures.NewTestSuite()
+		suite := fixtures.NewTestSuite().Faucet()
 
 		// [hack] store fund key on secret manager
 		suite.SecretManager.Create(suite.Solana.Fund.PublicKey().String(), suite.Solana.Fund.PrivateKey)

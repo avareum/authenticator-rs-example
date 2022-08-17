@@ -21,6 +21,11 @@ func NewTestSuite() *TestSuite {
 	return t
 }
 
+func (t *TestSuite) Faucet() *TestSuite {
+	t.Solana.Airdrop()
+	return t
+}
+
 func (t *TestSuite) NewTestSignerRequest() signerTypes.SignerRequest {
 	return signerTypes.SignerRequest{
 		Chain:     "solana",
