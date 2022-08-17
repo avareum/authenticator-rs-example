@@ -47,7 +47,6 @@ func (w *ServiceACL) init() error {
 	}
 	w.storageClient = client
 	return w.FetchServiceKeys()
-
 }
 
 func (w *ServiceACL) FetchServiceKeys() error {

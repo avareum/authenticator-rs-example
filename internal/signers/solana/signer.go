@@ -50,7 +50,6 @@ func (s *SolanaSigner) SignAndBroadcast(ctx context.Context, req types.SignerReq
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("fund signer (payer)", fundSigner.PublicKey().String())
 	tx, err := s.decode(ctx, req.Payload)
 	if err != nil {
 		return nil, err

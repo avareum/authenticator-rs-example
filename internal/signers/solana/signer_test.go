@@ -19,11 +19,10 @@ func NewTestSigner() *SolanaSigner {
 	return s
 }
 
-var suite = fixtures.NewTestSuite()
-var signer = NewTestSigner()
-
-func Test_SignerDecoder(t *testing.T) {
+func Test_SolanaDecoder(t *testing.T) {
 	t.Run("should decode tx", func(t *testing.T) {
+		suite := fixtures.NewTestSuite()
+		signer := NewTestSigner()
 		receiver := solana.NewWallet()
 		originalTx := suite.Solana.NewTx(system.NewTransferInstruction(
 			100000,

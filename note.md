@@ -6,7 +6,7 @@
 - [x] receive & parse request from message queue to SignerRequest
 - [x] publish on-chain signature
 - [x] SignerApp unit tests
-- [ ] ACL unit tests
+- [x] ACL unit tests
 - [ ] Solana signer unit tests
 - [ ] integrate with GCP pubsub
 - [ ] GCP cloud log (hook from `SignerRequestedResponseHandler`)
