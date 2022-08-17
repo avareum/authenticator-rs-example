@@ -3,6 +3,7 @@ package message_queue
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"cloud.google.com/go/pubsub"
 	signersTypes "github.com/avareum/avareum-hubble-signer/internal/signers/types"
@@ -12,19 +13,21 @@ import (
 type Pubsub struct {
 	types.MessageQueue
 	client         *pubsub.Client
-	cfg            PubsubConfig
+	opt            PubsubOptions
 	requestChannel chan signersTypes.SignerRequest
 }
 
-type PubsubConfig struct {
-	ProjectID      string
+type PubsubOptions struct {
 	SubscriptionID string
-	PublishID      string
 }
 
-func NewPubsub(cfg PubsubConfig) (*Pubsub, error) {
+func NewPubsub() (*Pubsub, error) {
+	return NewPubsubWithOpt(PubsubOptions{})
+}
+
+func NewPubsubWithOpt(opt PubsubOptions) (*Pubsub, error) {
 	pubsub := &Pubsub{
-		cfg:            cfg,
+		opt:            opt,
 		requestChannel: make(chan signersTypes.SignerRequest),
 	}
 	err := pubsub.init()
@@ -35,7 +38,7 @@ func NewPubsub(cfg PubsubConfig) (*Pubsub, error) {
 }
 
 func (p *Pubsub) init() error {
-	client, err := pubsub.NewClient(context.TODO(), p.cfg.ProjectID)
+	client, err := pubsub.NewClient(context.TODO(), os.Getenv("GCP_PROJECT"))
 	if err != nil {
 		return fmt.Errorf("Pubsub: NewClient: %v", err)
 	}
@@ -44,7 +47,7 @@ func (p *Pubsub) init() error {
 }
 
 func (p *Pubsub) Receive() error {
-	sub := p.client.Subscription(p.cfg.SubscriptionID)
+	sub := p.client.Subscription(p.opt.SubscriptionID)
 	err := sub.Receive(context.TODO(), func(_ context.Context, msg *pubsub.Message) {
 		// TODO: parse message to signer request
 		req := signersTypes.SignerRequest{}

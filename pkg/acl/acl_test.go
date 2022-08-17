@@ -13,7 +13,7 @@ func Test_SignatureVerification(t *testing.T) {
 
 	t.Run("should verify payload & signature", func(t *testing.T) {
 		aclSuite := fixtures.NewTestACL()
-		acl, err := NewServiceACL()
+		acl, err := NewServiceACLWithOpt(ServiceACLOptions{SkipFetchOnVerify: true})
 		require.Nil(t, err)
 
 		acc1, err := solana.NewRandomPrivateKey()
@@ -62,7 +62,7 @@ func Test_SignatureVerification(t *testing.T) {
 
 	t.Run("should verify can call", func(t *testing.T) {
 		aclSuite := fixtures.NewTestACL()
-		acl, err := NewServiceACL()
+		acl, err := NewServiceACLWithOpt(ServiceACLOptions{SkipFetchOnVerify: true})
 		require.Nil(t, err)
 
 		type CanCallTestCase struct {

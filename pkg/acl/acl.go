@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"io"
+	"log"
 	"os"
 
 	"cloud.google.com/go/storage"
@@ -12,24 +13,30 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-type WhitelistOptions struct {
-	ProjectID string
-	Bucket    string
+type ServiceACLOptions struct {
+	ProjectID         string
+	Bucket            string
+	SkipFetchOnVerify bool
 }
 
 type ServiceACL struct {
 	types.ACL
 	serviceKeys   map[string][]byte
-	opt           WhitelistOptions
+	opt           ServiceACLOptions
 	storageClient *storage.Client
 }
 
 func NewServiceACL() (*ServiceACL, error) {
+	return NewServiceACLWithOpt(ServiceACLOptions{
+		ProjectID:         os.Getenv("GCP_PROJECT"),
+		Bucket:            "service-keys",
+		SkipFetchOnVerify: false,
+	})
+}
+
+func NewServiceACLWithOpt(opt ServiceACLOptions) (*ServiceACL, error) {
 	w := &ServiceACL{
-		opt: WhitelistOptions{
-			ProjectID: os.Getenv("GCP_PROJECT"),
-			Bucket:    "service-keys",
-		},
+		opt:         opt,
 		serviceKeys: map[string][]byte{},
 	}
 	err := w.init()
@@ -46,10 +53,10 @@ func (w *ServiceACL) init() error {
 		return err
 	}
 	w.storageClient = client
-	return w.FetchServiceKeys()
+	return nil
 }
 
-func (w *ServiceACL) FetchServiceKeys() error {
+func (w *ServiceACL) fetchServiceKeys() error {
 	bkt := w.storageClient.Bucket(w.opt.Bucket)
 
 	// list all blobs in the bucket
@@ -88,8 +95,8 @@ func (w *ServiceACL) setServiceKey(serviceName string, pub []byte) {
 	w.serviceKeys[serviceName] = pub
 }
 
-// GetPublicKey returns the public key for the given service name.
-func (w *ServiceACL) GetPublicKey(serviceName string) []byte {
+// getServiceKey returns the public key for the given service name.
+func (w *ServiceACL) getServiceKey(serviceName string) []byte {
 	return w.serviceKeys[serviceName]
 }
 
@@ -102,7 +109,16 @@ func (w *ServiceACL) Verify(pub ed25519.PublicKey, payload []byte, payloadSignat
 }
 
 func (w *ServiceACL) CanCall(serviceName string, payload []byte, payloadSignature []byte) bool {
-	pubBytes := w.GetPublicKey(serviceName)
+	// fetch if the service keys are available
+	if !w.opt.SkipFetchOnVerify {
+		err := w.fetchServiceKeys()
+		if err != nil {
+			log.Println(err)
+			return false
+		}
+	}
+
+	pubBytes := w.getServiceKey(serviceName)
 	if len(pubBytes) == 0 {
 		return false
 	}

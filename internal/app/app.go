@@ -7,6 +7,7 @@ import (
 	signerTypes "github.com/avareum/avareum-hubble-signer/internal/signers/types"
 	"github.com/avareum/avareum-hubble-signer/internal/types"
 	aclTypes "github.com/avareum/avareum-hubble-signer/pkg/acl/types"
+	"github.com/avareum/avareum-hubble-signer/pkg/logger"
 	smTypes "github.com/avareum/avareum-hubble-signer/pkg/secret_manager/types"
 )
 
@@ -32,6 +33,12 @@ func (a *AppSigner) RegisterACL(acl aclTypes.ACL) {
 	a.acl = acl
 }
 
+func (a *AppSigner) CreateDefaultSignerRequestedResponseHandler() types.SignerRequestedResponseHandler {
+	handler := make(types.SignerRequestedResponseHandler)
+	a.RegisterSignerRequestedResponseHandler(handler)
+	return handler
+}
+
 func (a *AppSigner) RegisterSignerRequestedResponseHandler(handler types.SignerRequestedResponseHandler) {
 	a.reqHandler = handler
 }
@@ -51,11 +58,11 @@ func (a *AppSigner) response(response types.SignerRequestedResponse) {
 	if a.reqHandler == nil {
 		return
 	}
-
 	// prevent deadlock
 	select {
 	case a.reqHandler <- response:
 	default:
+		logger.Default.Err("cannot send response to handler", response)
 	}
 }
 
@@ -69,6 +76,7 @@ func (a *AppSigner) Receive(ctx context.Context, mq types.MessageQueue) error {
 	}
 
 	// initiate message queue connection
+	logger.Default.Info("initiate message queue connection...")
 	receiver := mq.ReceiveChannel()
 	for {
 		select {

@@ -8,7 +8,9 @@
 - [x] SignerApp unit tests
 - [x] ACL unit tests
 - [ ] Solana signer unit tests
-- [ ] integrate with GCP pubsub
-- [ ] GCP cloud log (hook from `SignerRequestedResponseHandler`)
+- [ ] Signer app support partial signing
+- [ ] integrate with GCP pubsub (wait: `core`)
+- [x] GCP cloud log (hook from `SignerRequestedResponseHandler`)
 - [ ] implement Fund wallet creation APIs (mq features)
 - [ ] implement Ethereum signer
+- [x] reload ACL list before verifying payload signature

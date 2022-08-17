@@ -2,7 +2,6 @@ package fixtures
 
 import (
 	signerTypes "github.com/avareum/avareum-hubble-signer/internal/signers/types"
-	"github.com/avareum/avareum-hubble-signer/internal/types"
 )
 
 type TestSuite struct {
@@ -20,10 +19,6 @@ func NewTestSuite() *TestSuite {
 		ACL:           NewTestACL(),
 	}
 	return t
-}
-
-func (t *TestSuite) NewSignerRequestedResponse() chan types.SignerRequestedResponse {
-	return make(chan types.SignerRequestedResponse)
 }
 
 func (t *TestSuite) NewTestSignerRequest() signerTypes.SignerRequest {

@@ -39,11 +39,9 @@ func Test_App(t *testing.T) {
 
 	t.Run("should reject invalid request signer id", func(t *testing.T) {
 		suite := fixtures.NewTestSuite()
-		reqHandler := suite.NewSignerRequestedResponse()
 
 		app := NewAppSigner()
 		app.RegisterSecretManager(suite.SecretManager)
-		app.RegisterSignerRequestedResponseHandler(reqHandler)
 		go app.Receive(context.TODO(), suite.MessageQueue)
 
 		// [hack] push mock request
@@ -56,13 +54,12 @@ func Test_App(t *testing.T) {
 			Signature: []byte{},
 		})
 
-		response := <-reqHandler
+		response := <-app.CreateDefaultSignerRequestedResponseHandler()
 		require.Regexp(t, "signer .* not found", response.Error.Error())
 	})
 
 	t.Run("should reject mismatch service caller", func(t *testing.T) {
 		suite := fixtures.NewTestSuite()
-		reqHandler := suite.NewSignerRequestedResponse()
 		suite.ACL.CreateTestServiceKey("caller-service")
 		suite.ACL.CreateTestServiceKey("unauthorize-service")
 
@@ -74,7 +71,6 @@ func Test_App(t *testing.T) {
 		app := NewAppSigner()
 		app.RegisterSecretManager(suite.SecretManager)
 		app.RegisterACL(suite.ACL)
-		app.RegisterSignerRequestedResponseHandler(reqHandler)
 		go app.Receive(context.TODO(), suite.MessageQueue)
 
 		// [hack] push mock request
@@ -87,7 +83,7 @@ func Test_App(t *testing.T) {
 			Signature: mismatchSignature,
 		})
 
-		response := <-reqHandler
+		response := <-app.CreateDefaultSignerRequestedResponseHandler()
 		require.Error(t, response.Error, "invalid caller signature")
 	})
 
@@ -123,12 +119,9 @@ func Test_App(t *testing.T) {
 			cancelCtx()
 		}()
 
-		reqHandler := suite.NewSignerRequestedResponse()
-
 		app := NewAppSigner()
 		app.RegisterSecretManager(suite.SecretManager)
 		app.RegisterACL(suite.ACL)
-		app.RegisterSignerRequestedResponseHandler(reqHandler)
 		err = app.AddSigners(solana.NewSolanaSigner(solana.SolanaSignerOptions{
 			RPC: "http://127.0.0.1:8899",
 		}))
@@ -138,7 +131,7 @@ func Test_App(t *testing.T) {
 		go app.Receive(ctx, suite.MessageQueue)
 
 		// wait for the response
-		response := <-reqHandler
+		response := <-app.CreateDefaultSignerRequestedResponseHandler()
 		require.Nil(t, response.Error)
 		require.NotNil(t, response.Signatures)
 		require.Equal(t, 1, len(*response.Signatures))
