@@ -50,7 +50,8 @@ func (s *SolanaSigner) SignAndBroadcast(ctx context.Context, req types.SignerReq
 	if err != nil {
 		return nil, err
 	}
-	tx, err := s.decode(ctx, req.Payload)
+
+	tx, err := s.tryDecode(ctx, req.Payload)
 	if err != nil {
 		return nil, err
 	}
@@ -80,6 +81,21 @@ func (s *SolanaSigner) getFundSignerKey(ctx context.Context, fund string) (solan
 	return solana.PrivateKey([]byte(raw)), nil
 }
 
+func (s *SolanaSigner) tryDecode(ctx context.Context, payload []byte) (*solana.Transaction, error) {
+	// try to marshal whole tx first
+	tx, err := s.decodeTx(ctx, payload)
+	if err == nil {
+		return tx, nil
+	}
+
+	// otherwise, try to unmarshal only tx message
+	tx, err = s.decode(ctx, payload)
+	if err == nil {
+		return tx, nil
+	}
+	return nil, fmt.Errorf("SolanaSigner: unmarshal tx msg failed: %v", err)
+}
+
 func (s *SolanaSigner) decode(ctx context.Context, payload []byte) (*solana.Transaction, error) {
 	message := solana.Message{}
 	err := bin.UnmarshalBin(&message, payload)
@@ -90,6 +106,14 @@ func (s *SolanaSigner) decode(ctx context.Context, payload []byte) (*solana.Tran
 	tx.Message = message
 	// TODO: added feature partial sign
 	return &tx, nil
+}
+
+func (s *SolanaSigner) decodeTx(ctx context.Context, payload []byte) (*solana.Transaction, error) {
+	tx, err := solana.TransactionFromDecoder(bin.NewBinDecoder(payload))
+	if err != nil {
+		return nil, fmt.Errorf("SolanaSigner: decode transaction failed: %v", err)
+	}
+	return tx, nil
 }
 
 func (s *SolanaSigner) sign(ctx context.Context, tx *solana.Transaction, account solana.PrivateKey) ([]solana.Signature, error) {
