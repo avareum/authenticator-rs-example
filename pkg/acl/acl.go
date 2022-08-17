@@ -24,7 +24,7 @@ type ServiceACL struct {
 	storageClient *storage.Client
 }
 
-func NewServiceACL() (types.ACL, error) {
+func NewServiceACL() (*ServiceACL, error) {
 	w := &ServiceACL{
 		opt: WhitelistOptions{
 			ProjectID: os.Getenv("GCP_PROJECT"),
@@ -46,11 +46,11 @@ func (w *ServiceACL) init() error {
 		return err
 	}
 	w.storageClient = client
-	return nil
+	return w.FetchServiceKeys()
 
 }
 
-func (w *ServiceACL) Reload() error {
+func (w *ServiceACL) FetchServiceKeys() error {
 	bkt := w.storageClient.Bucket(w.opt.Bucket)
 
 	// list all blobs in the bucket
@@ -84,6 +84,12 @@ func (w *ServiceACL) Reload() error {
 	return nil
 }
 
+// setServiceKey sets the service key for the given service name.
+func (w *ServiceACL) setServiceKey(serviceName string, pub []byte) {
+	w.serviceKeys[serviceName] = pub
+}
+
+// GetPublicKey returns the public key for the given service name.
 func (w *ServiceACL) GetPublicKey(serviceName string) []byte {
 	return w.serviceKeys[serviceName]
 }

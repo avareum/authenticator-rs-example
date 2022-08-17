@@ -1,52 +1,115 @@
 package acl
 
 import (
-	"encoding/base64"
+	"crypto/ed25519"
 	"testing"
 
+	"github.com/avareum/avareum-hubble-signer/tests/fixtures"
 	"github.com/gagliardetto/solana-go"
 	"github.com/test-go/testify/require"
 )
 
-type SignerTestCase struct {
-	signer    string
-	signature string
-	payload   string
-	expect    bool
-}
-
 func Test_SignatureVerification(t *testing.T) {
 
-	t.Run("should verify signatures", func(t *testing.T) {
-		w, err := NewServiceACL()
+	t.Run("should verify payload & signature", func(t *testing.T) {
+		aclSuite := fixtures.NewTestACL()
+		acl, err := NewServiceACL()
 		require.Nil(t, err)
-		tests := []SignerTestCase{
+
+		acc1, err := solana.NewRandomPrivateKey()
+		require.Nil(t, err)
+		acc2, err := solana.NewRandomPrivateKey()
+		require.Nil(t, err)
+
+		type VerifyTestCase struct {
+			signer    solana.PublicKey
+			signature []byte
+			payload   []byte
+			expect    bool
+		}
+
+		tests := []VerifyTestCase{
 			{
-				signer:    "2V7t5NaKY7aGkwytCWQgvUYZfEr9XMwNChhJEakTExk6",
-				signature: "3APVUYY2Qcq9WwPSciQ1xicshQcsXJWhgD1x5YEMNnNnKtpaAJtRhDVMWcvePosamk3JfSKpBM8qt5ZkAQgRNSzo",
-				payload:   "AQACBBYPusE6993YBdMXCj3gxr2XEmoeAsDSWdCobvgh1uXHoaZGX0wuvyRMMdgLyVwnNFo0JOQowt7zPs7Z6Q0/cBsGp9UXGMd0yShWY5hpHV62i164o5tLbVxzVVshAAAAANzl6+HknDufEUy1VExQqZ7A1pLWP1Z5WuAprIPZ6ovia//gAIGoVfMJgSuJp8/VsCUq8qvMdiHNGrMrQAxoS2QBAwMAAQIoAgAAAAcAAAABAAAAAAAAAM/ncrkCAAAACJ9fAQAAAAD7FSgHAAAAAA==",
+				signer:    acc1.PublicKey(),
+				payload:   []byte("hello"),
+				signature: aclSuite.MustSignPayloadWithKey(ed25519.PrivateKey(acc1), []byte("hello")),
 				expect:    true,
 			},
 			{
-				signer:    "AXUChvpRwUUPMJhA4d23WcoyAL7W8zgAeo7KoH57c75F",
-				signature: "2c5u22N6Yyjj7qQdGtEshp4n9r4akLyRLJijnXL9HnQAXqq7S9cfnGdi5mwnfQ5kJHQuRv62T366SKaztHiUUqnK",
-				payload:   "AQACBo2HXSJ3fw0pdiiQj9fBoRA5Wicjyla4ARhrK90xeo0mD4K9wHSEzSq9lEFUOSPloeUrUL/2uV3S6+lTeGNtTMtTP2NRTSucECyiWtS2HzfxwLnbnxVbXNH0T0egDFCfVK5ESO7I2Pz56XFyxewO0gbya1rvqPPu0CGg/LC/Wl5BhQ8tbgKkevgk0Jq2ncQtcMsoy/okn7fuV7nSVsEnYu8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIvotbwkk/hzTtAxHIaRCSJjB4WdQUXrn+6aEapl6XgPAgQFAQIDAgIHAAMAAAABAAUCAAAMAgAAAOsNAAAAAAAA",
+				signer:    acc2.PublicKey(),
+				payload:   []byte("world"),
+				signature: aclSuite.MustSignPayloadWithKey(ed25519.PrivateKey(acc2), []byte("world")),
 				expect:    true,
 			},
 			{
-				signer:    "2vKtu3nW1TS6iPvJPK8R88B5QfDrwJDwwB11Uu1CN9o7",
-				signature: "3APVUYY2Qcq9WwPSciQ1xicshQcsXJWhgD1x5YEMNnNnKtpaAJtRhDVMWcvePosamk3JfSKpBM8qt5ZkAQgRNSzo",
-				payload:   "AQACBBYPusE6993YBdMXCj3gxr2XEmoeAsDSWdCobvgh1uXHoaZGX0wuvyRMMdgLyVwnNFo0JOQowt7zPs7Z6Q0/cBsGp9UXGMd0yShWY5hpHV62i164o5tLbVxzVVshAAAAANzl6+HknDufEUy1VExQqZ7A1pLWP1Z5WuAprIPZ6ovia//gAIGoVfMJgSuJp8/VsCUq8qvMdiHNGrMrQAxoS2QBAwMAAQIoAgAAAAcAAAABAAAAAAAAAM/ncrkCAAAACJ9fAQAAAAD7FSgHAAAAAA==",
+				signer:    acc1.PublicKey(),
+				payload:   []byte("payload"),
+				signature: aclSuite.MustSignPayloadWithKey(ed25519.PrivateKey(acc1), []byte("mismatch payload")),
+				expect:    false,
+			},
+			{
+				signer:    acc2.PublicKey(),
+				payload:   []byte("acc2, sig by acc1"),
+				signature: aclSuite.MustSignPayloadWithKey(ed25519.PrivateKey(acc1), []byte("acc2, sig by acc1")),
 				expect:    false,
 			},
 		}
 
 		for _, test := range tests {
-			pub := solana.MustPublicKeyFromBase58(test.signer)
-			sig := solana.MustSignatureFromBase58(test.signature)
-			msg, err := base64.StdEncoding.DecodeString(test.payload)
+			require.Equal(t, test.expect, acl.Verify(test.signer[:], test.payload, test.signature))
+		}
+	})
+
+	t.Run("should verify can call", func(t *testing.T) {
+		aclSuite := fixtures.NewTestACL()
+		acl, err := NewServiceACL()
+		require.Nil(t, err)
+
+		type CanCallTestCase struct {
+			service   string
+			signature []byte
+			payload   []byte
+			expect    bool
+		}
+
+		service1, err := solana.NewRandomPrivateKey()
+		require.Nil(t, err)
+		unauthorizedService1, err := solana.NewRandomPrivateKey()
+		require.Nil(t, err)
+
+		// [hack] register service
+		acl.setServiceKey("service1", service1.PublicKey().Bytes())
+
+		tests := []CanCallTestCase{
+			{
+				service:   "service1",
+				payload:   []byte("hello"),
+				signature: aclSuite.MustSignPayloadWithKey(ed25519.PrivateKey(service1), []byte("hello")),
+				expect:    true,
+			},
+			{
+				service:   "service1",
+				payload:   []byte("payload"),
+				signature: aclSuite.MustSignPayloadWithKey(ed25519.PrivateKey(service1), []byte("mismatch payload")),
+				expect:    false,
+			},
+			{
+				service:   "introduce as service1, signed by unauthorizedService1",
+				payload:   []byte("payload"),
+				signature: aclSuite.MustSignPayloadWithKey(ed25519.PrivateKey(unauthorizedService1), []byte("introduce as service1, signed by unauthorizedService1")),
+				expect:    false,
+			},
+			{
+				service:   "unauthorizedService1",
+				payload:   []byte("unauthorized service"),
+				signature: aclSuite.MustSignPayloadWithKey(ed25519.PrivateKey(unauthorizedService1), []byte("unauthorized service")),
+				expect:    false,
+			},
+		}
+
+		for _, test := range tests {
 			require.Nil(t, err)
-			require.Equal(t, w.Verify(pub[:], msg, sig[:]), test.expect)
+			require.Equal(t, test.expect, acl.CanCall(test.service, test.payload, test.signature))
 		}
 	})
 

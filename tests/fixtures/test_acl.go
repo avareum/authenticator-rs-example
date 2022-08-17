@@ -28,7 +28,18 @@ func (a *TestACL) CreateTestServiceKey(serviceName string) error {
 
 func (a *TestACL) SignPayload(serviceName string, payload []byte) ([]byte, error) {
 	priv := a.keypairs[serviceName]
-	p := ed25519.PrivateKey(priv)
+	return a.SignPayloadWithKey(ed25519.PrivateKey(priv), payload)
+}
+
+func (a *TestACL) MustSignPayloadWithKey(p ed25519.PrivateKey, payload []byte) []byte {
+	signData, err := p.Sign(rand.Reader, payload, crypto.Hash(0))
+	if err != nil {
+		panic(err)
+	}
+	return signData
+}
+
+func (a *TestACL) SignPayloadWithKey(p ed25519.PrivateKey, payload []byte) ([]byte, error) {
 	signData, err := p.Sign(rand.Reader, payload, crypto.Hash(0))
 	if err != nil {
 		return nil, err
@@ -37,7 +48,7 @@ func (a *TestACL) SignPayload(serviceName string, payload []byte) ([]byte, error
 }
 
 /*
- ACL implementaiton for GCP Secret Manager
+ ACL implementaiton for Local Secret Manager
 */
 
 func (w *TestACL) Verify(pub ed25519.PublicKey, payload []byte, payloadSignature []byte) bool {
