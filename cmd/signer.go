@@ -5,6 +5,7 @@ import (
 
 	"github.com/avareum/avareum-hubble-signer/internal/app"
 	"github.com/avareum/avareum-hubble-signer/internal/message_queue"
+	"github.com/avareum/avareum-hubble-signer/internal/server/api"
 	"github.com/avareum/avareum-hubble-signer/internal/signers/ethereum"
 	"github.com/avareum/avareum-hubble-signer/internal/signers/solana"
 	"github.com/avareum/avareum-hubble-signer/pkg/acl"
@@ -33,6 +34,10 @@ func main() {
 	}
 	logger.Default = gcpLogger
 
+	// Create rest api
+	go api.NewRestAPI().Serve()
+
+	// Create the app signer.
 	app := app.NewAppSigner()
 	app.RegisterACL(acl)
 	app.RegisterSecretManager(sm)
