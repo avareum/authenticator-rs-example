@@ -48,8 +48,8 @@ func (s *GCPSecretManager) init() error {
 
 func (s *GCPSecretManager) Create(id string, payload []byte) (string, error) {
 	createSecretReq := &secretmanagerpb.CreateSecretRequest{
-		Parent:   fmt.Sprintf("projects/signer-%s", s.opt.ProjectID),
-		SecretId: id,
+		Parent:   fmt.Sprintf("projects/%s", s.opt.ProjectID),
+		SecretId: fmt.Sprintf("signer-%s", id),
 		Secret: &secretmanagerpb.Secret{
 			Replication: &secretmanagerpb.Replication{
 				Replication: &secretmanagerpb.Replication_Automatic_{
