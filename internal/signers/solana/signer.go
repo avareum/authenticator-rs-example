@@ -104,7 +104,6 @@ func (s *SolanaSigner) decode(ctx context.Context, payload []byte) (*solana.Tran
 	}
 	tx := solana.Transaction{}
 	tx.Message = message
-	// TODO: added feature partial sign
 	return &tx, nil
 }
 

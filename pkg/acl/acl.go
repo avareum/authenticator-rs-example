@@ -1,43 +1,38 @@
 package acl
 
 import (
-	"context"
 	"crypto/ed25519"
-	"io"
+	"fmt"
 	"log"
-	"os"
 
-	"cloud.google.com/go/storage"
 	"github.com/avareum/avareum-hubble-signer/pkg/acl/types"
+	"github.com/avareum/avareum-hubble-signer/pkg/secret_manager"
+	smTypes "github.com/avareum/avareum-hubble-signer/pkg/secret_manager/types"
 	"github.com/gagliardetto/solana-go"
-	"google.golang.org/api/iterator"
 )
 
 type ServiceACLOptions struct {
-	ProjectID         string
-	Bucket            string
 	SkipFetchOnVerify bool
+	Prefix            string
+	SecretManager     smTypes.SecretManager
 }
 
 type ServiceACL struct {
 	types.ACL
-	serviceKeys   map[string][]byte
-	opt           ServiceACLOptions
-	storageClient *storage.Client
+	opt ServiceACLOptions
+	sm  smTypes.SecretManager
 }
 
 func NewServiceACL() (*ServiceACL, error) {
 	return NewServiceACLWithOpt(ServiceACLOptions{
-		ProjectID:         os.Getenv("GCP_PROJECT"),
-		Bucket:            "service-keys",
 		SkipFetchOnVerify: false,
+		Prefix:            "",
 	})
 }
 
 func NewServiceACLWithOpt(opt ServiceACLOptions) (*ServiceACL, error) {
 	w := &ServiceACL{
-		opt:         opt,
-		serviceKeys: map[string][]byte{},
+		opt: opt,
 	}
 	err := w.init()
 	if err != nil {
@@ -47,57 +42,25 @@ func NewServiceACLWithOpt(opt ServiceACLOptions) (*ServiceACL, error) {
 }
 
 func (w *ServiceACL) init() error {
-	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return err
+	if w.opt.SecretManager == nil {
+		sm, err := secret_manager.NewGCPSecretManager()
+		if err != nil {
+			return err
+		}
+		w.sm = sm
+	} else {
+		w.sm = w.opt.SecretManager
 	}
-	w.storageClient = client
 	return nil
-}
-
-func (w *ServiceACL) fetchServiceKeys() error {
-	bkt := w.storageClient.Bucket(w.opt.Bucket)
-
-	// list all blobs in the bucket
-	query := &storage.Query{Prefix: ""}
-	iter := bkt.Objects(context.TODO(), query)
-
-	serviceKeys := map[string][]byte{}
-	for {
-		attrs, err := iter.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
-		// ready object body
-		rc, err := bkt.Object(attrs.Name).NewReader(context.TODO())
-		if err != nil {
-			return err
-		}
-		defer rc.Close()
-		pub, err := io.ReadAll(rc)
-		if err != nil {
-			return err
-		}
-
-		serviceKeys[attrs.Name] = pub
-	}
-	w.serviceKeys = serviceKeys
-	return nil
-}
-
-// setServiceKey sets the service key for the given service name.
-func (w *ServiceACL) setServiceKey(serviceName string, pub []byte) {
-	w.serviceKeys[serviceName] = pub
 }
 
 // getServiceKey returns the public key for the given service name.
 func (w *ServiceACL) getServiceKey(serviceName string) []byte {
-	return w.serviceKeys[serviceName]
+	p, err := w.sm.Get(fmt.Sprintf("%s%s", w.opt.Prefix, serviceName))
+	if err != nil {
+		return []byte{}
+	}
+	return ed25519.PrivateKey(p).Public().(ed25519.PublicKey)
 }
 
 /*
@@ -109,17 +72,9 @@ func (w *ServiceACL) Verify(pub ed25519.PublicKey, payload []byte, payloadSignat
 }
 
 func (w *ServiceACL) CanCall(serviceName string, payload []byte, payloadSignature []byte) bool {
-	// fetch if the service keys are available
-	if !w.opt.SkipFetchOnVerify {
-		err := w.fetchServiceKeys()
-		if err != nil {
-			log.Println(err)
-			return false
-		}
-	}
-
 	pubBytes := w.getServiceKey(serviceName)
 	if len(pubBytes) == 0 {
+		log.Println("error: service key not found")
 		return false
 	}
 	pub := solana.PublicKeyFromBytes(pubBytes)

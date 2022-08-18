@@ -13,20 +13,20 @@ import (
 type GCPSecretManager struct {
 	types.SecretManager
 	client *secretmanager.Client
-	opt    GCPSecretManagerConfig
+	opt    GCPSecretManagerOptions
 }
 
-type GCPSecretManagerConfig struct {
+type GCPSecretManagerOptions struct {
 	ProjectID string
 }
 
 func NewGCPSecretManager() (types.SecretManager, error) {
-	return NewGCPSecretManagerWithOpt(GCPSecretManagerConfig{
+	return NewGCPSecretManagerWithOpt(GCPSecretManagerOptions{
 		ProjectID: os.Getenv("GCP_PROJECT"),
 	})
 }
 
-func NewGCPSecretManagerWithOpt(opt GCPSecretManagerConfig) (types.SecretManager, error) {
+func NewGCPSecretManagerWithOpt(opt GCPSecretManagerOptions) (types.SecretManager, error) {
 	sm := &GCPSecretManager{
 		opt: opt,
 	}
@@ -49,7 +49,7 @@ func (s *GCPSecretManager) init() error {
 func (s *GCPSecretManager) Create(id string, payload []byte) (string, error) {
 	createSecretReq := &secretmanagerpb.CreateSecretRequest{
 		Parent:   fmt.Sprintf("projects/%s", s.opt.ProjectID),
-		SecretId: fmt.Sprintf("signer-%s", id),
+		SecretId: id,
 		Secret: &secretmanagerpb.Secret{
 			Replication: &secretmanagerpb.Replication{
 				Replication: &secretmanagerpb.Replication_Automatic_{
@@ -84,13 +84,13 @@ func (s *GCPSecretManager) Create(id string, payload []byte) (string, error) {
 func (s *GCPSecretManager) Get(id string) ([]byte, error) {
 	// Build the request.
 	accessRequest := &secretmanagerpb.AccessSecretVersionRequest{
-		Name: fmt.Sprintf("projects/%s/secrets/signer-%s/versions/latest", s.opt.ProjectID, id),
+		Name: fmt.Sprintf("projects/%s/secrets/%s/versions/latest", s.opt.ProjectID, id),
 	}
 
 	// Call the API.
 	result, err := s.client.AccessSecretVersion(context.TODO(), accessRequest)
 	if err != nil {
-		return nil, fmt.Errorf("GCPSecretManager: failed to access secret version: %v", err)
+		return nil, fmt.Errorf("GCPSecretManager: failed to access secret: %v", err)
 	}
 
 	return result.Payload.Data, nil

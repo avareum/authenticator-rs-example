@@ -62,7 +62,8 @@ func Test_SignatureVerification(t *testing.T) {
 
 	t.Run("should verify can call", func(t *testing.T) {
 		aclSuite := fixtures.NewTestACL()
-		acl, err := NewServiceACLWithOpt(ServiceACLOptions{SkipFetchOnVerify: true})
+		sm := fixtures.NewTestSecretManager()
+		acl, err := NewServiceACLWithOpt(ServiceACLOptions{SkipFetchOnVerify: true, Prefix: "SERVICE_", SecretManager: sm})
 		require.Nil(t, err)
 
 		type CanCallTestCase struct {
@@ -77,8 +78,8 @@ func Test_SignatureVerification(t *testing.T) {
 		unauthorizedService1, err := solana.NewRandomPrivateKey()
 		require.Nil(t, err)
 
-		// [hack] register service
-		acl.setServiceKey("service1", service1.PublicKey().Bytes())
+		// [hack] create service key
+		sm.Create("SERVICE_service1", service1)
 
 		tests := []CanCallTestCase{
 			{

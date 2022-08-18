@@ -22,8 +22,8 @@
   - permissions:
     - read: service(s), app_signer
     - write: admin
-- **Fund keys**:
-  - name: `FUND_{fund}_solana_mainnet-beta`
+- **Fund wallet keys**:
+  - name: `WALLET_{wallet}`
   - permissions:
     - read: app_signer
     - write: app_signer
