@@ -37,7 +37,7 @@ func Test_App(t *testing.T) {
 		}, "should panic")
 	})
 
-	t.Run("should reject invalid request signer id", func(t *testing.T) {
+	t.Run("should reject invalid signer id requested", func(t *testing.T) {
 		suite := fixtures.NewTestSuite().Faucet()
 
 		app := NewAppSigner()

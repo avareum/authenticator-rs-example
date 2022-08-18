@@ -12,5 +12,18 @@
 - [x] Signer app support partial signing
 - [ ] Solana signer unit tests
 - [ ] integrate with GCP pubsub (wait: `core`)
-- [ ] implement Fund wallet creation APIs (feature in `/http`)
+- [ ] implement fund wallet creation APIs (feature in `/http`)
 - [ ] implement Ethereum signer
+
+## Keystores
+
+- **Service keys**:
+  - name: `SERVICE_{service_name}`
+  - permissions:
+    - read: service(s), app_signer
+    - write: admin
+- **Fund keys**:
+  - name: `FUND_{fund}_solana_mainnet-beta`
+  - permissions:
+    - read: app_signer
+    - write: app_signer
