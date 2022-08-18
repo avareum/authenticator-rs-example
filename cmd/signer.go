@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/avareum/avareum-hubble-signer/internal/app"
 	"github.com/avareum/avareum-hubble-signer/internal/message_queue"
@@ -11,9 +12,14 @@ import (
 	"github.com/avareum/avareum-hubble-signer/pkg/acl"
 	"github.com/avareum/avareum-hubble-signer/pkg/logger"
 	"github.com/avareum/avareum-hubble-signer/pkg/secret_manager"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	err := godotenv.Load(".env")
+	if err != nil {
+		panic(err)
+	}
 	sm, err := secret_manager.NewGCPSecretManager()
 	if err != nil {
 		panic(err)
@@ -23,7 +29,7 @@ func main() {
 		panic(err)
 	}
 	mq, err := message_queue.NewPubsubWithOpt(message_queue.PubsubOptions{
-		SubscriptionID: "signer-requests",
+		SubscriptionID: os.Getenv("MQ_RECEIVE_CHANNEL"),
 	})
 	if err != nil {
 		panic(err)
