@@ -7,15 +7,13 @@ import (
 	signerTypes "github.com/avareum/avareum-hubble-signer/internal/signers/types"
 	"github.com/avareum/avareum-hubble-signer/internal/types"
 	aclTypes "github.com/avareum/avareum-hubble-signer/pkg/acl/types"
-	"github.com/avareum/avareum-hubble-signer/pkg/logger"
 	smTypes "github.com/avareum/avareum-hubble-signer/pkg/secret_manager/types"
 )
 
 type AppSigner struct {
-	Signers    map[string]signerTypes.Signer
-	acl        aclTypes.ACL
-	sm         smTypes.SecretManager
-	reqHandler types.SignerRequestedResponseHandler
+	Signers map[string]signerTypes.Signer
+	acl     aclTypes.ACL
+	sm      smTypes.SecretManager
 }
 
 func NewAppSigner() *AppSigner {
@@ -33,16 +31,6 @@ func (a *AppSigner) RegisterACL(acl aclTypes.ACL) {
 	a.acl = acl
 }
 
-func (a *AppSigner) CreateDefaultSignerRequestedResponseHandler() types.SignerRequestedResponseHandler {
-	handler := make(types.SignerRequestedResponseHandler)
-	a.RegisterSignerRequestedResponseHandler(handler)
-	return handler
-}
-
-func (a *AppSigner) RegisterSignerRequestedResponseHandler(handler types.SignerRequestedResponseHandler) {
-	a.reqHandler = handler
-}
-
 func (a *AppSigner) AddSigners(signers ...signerTypes.Signer) error {
 	for _, s := range signers {
 		err := s.Init()
@@ -54,63 +42,31 @@ func (a *AppSigner) AddSigners(signers ...signerTypes.Signer) error {
 	return nil
 }
 
-func (a *AppSigner) response(response types.SignerRequestedResponse) {
-	if a.reqHandler == nil {
-		return
-	}
-	// prevent deadlock
-	select {
-	case a.reqHandler <- response:
-	default:
-		logger.Default.Err("cannot send response to handler", response)
-	}
-}
-
-func (a *AppSigner) Receive(ctx context.Context, mq types.MessageQueue) error {
+func (a *AppSigner) TrySign(ctx context.Context, req signerTypes.SignerRequest) (*types.SignerRequestedResponse, error) {
 	// register secret manager to all signer
 	if a.sm == nil {
-		panic("secret manager is not registered")
+		return nil, fmt.Errorf("secret manager is not registered")
 	}
 	for _, s := range a.Signers {
 		s.WithSecretManager(a.sm)
 	}
 
-	// initiate message queue connection
-	logger.Default.Info("initiate message queue connection...")
-	receiver := mq.ReceiveChannel()
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case req := <-receiver:
-			// check if the caller is whitelisted
-			if a.acl != nil && !a.acl.CanCall(req.Caller, req.Payload, req.Signature) {
-				a.response(types.SignerRequestedResponse{
-					Request: req,
-					Error:   fmt.Errorf("invalid caller signature"),
-				})
-				continue
-			}
+	// check if the caller is whitelisted
+	if a.acl != nil && !a.acl.CanCall(req.Caller, req.Payload, req.Signature) {
+		return nil, fmt.Errorf("invalid caller signature")
+	}
 
-			if signer, isExists := a.Signers[req.SignerID()]; isExists {
-				sigs, err := signer.SignAndBroadcast(ctx, req)
-				if err != nil {
-					a.response(types.SignerRequestedResponse{
-						Request: req,
-						Error:   err,
-					})
-				} else {
-					a.response(types.SignerRequestedResponse{
-						Request:    req,
-						Signatures: &sigs,
-					})
-				}
-			} else {
-				a.response(types.SignerRequestedResponse{
-					Request: req,
-					Error:   fmt.Errorf("signer %s not found", req.SignerID()),
-				})
-			}
+	if signer, isExists := a.Signers[req.SignerID()]; isExists {
+		sigs, err := signer.SignAndBroadcast(ctx, req)
+		if err != nil {
+			return nil, err
+		} else {
+			return &types.SignerRequestedResponse{
+				Request:    req,
+				Signatures: sigs,
+			}, nil
 		}
+	} else {
+		return nil, fmt.Errorf("signer %s not found", req.SignerID())
 	}
 }

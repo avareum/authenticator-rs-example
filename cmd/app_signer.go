@@ -6,7 +6,6 @@ import (
 
 	"github.com/avareum/avareum-hubble-signer/internal/app"
 	"github.com/avareum/avareum-hubble-signer/internal/message_queue"
-	"github.com/avareum/avareum-hubble-signer/internal/server/api"
 	"github.com/avareum/avareum-hubble-signer/internal/signers/ethereum"
 	"github.com/avareum/avareum-hubble-signer/internal/signers/solana"
 	"github.com/avareum/avareum-hubble-signer/pkg/acl"
@@ -20,6 +19,15 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	// Override the default logger with a GCP logger.
+	gcpLogger, err := logger.NewGCPCloudLogger("avareum-hubble-signer")
+	if err != nil {
+		panic(err)
+	}
+	logger.Default = gcpLogger
+
+	// Create the app signer.
 	sm, err := secret_manager.NewGCPSecretManager()
 	if err != nil {
 		panic(err)
@@ -28,22 +36,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	mq, err := message_queue.NewPubsubWithOpt(message_queue.PubsubOptions{
-		SubscriptionID: os.Getenv("MQ_RECEIVE_CHANNEL"),
-	})
-	if err != nil {
-		panic(err)
-	}
-	gcpLogger, err := logger.NewGCPCloudLogger("avareum-hubble-signer")
-	if err != nil {
-		panic(err)
-	}
-	logger.Default = gcpLogger
-
-	// Create rest api
-	go api.NewRestAPI().Serve()
-
-	// Create the app signer.
 	app := app.NewAppSigner()
 	app.RegisterACL(acl)
 	app.RegisterSecretManager(sm)
@@ -58,18 +50,25 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	go app.Receive(context.TODO(), mq)
 
-	handleResponses(app)
-}
-
-func handleResponses(app *app.AppSigner) {
+	// Create the message queue.
+	mq, err := message_queue.NewPubsubWithOpt(message_queue.PubsubOptions{
+		SubscriptionID: os.Getenv("MQ_RECEIVE_CHANNEL"),
+	})
+	if err != nil {
+		panic(err)
+	}
+	receiver := mq.ReceiveChannel()
 	for {
-		response := <-app.CreateDefaultSignerRequestedResponseHandler()
-		if response.Error != nil {
-			logger.Default.Err(response)
-		} else {
-			logger.Default.Info(response)
+		select {
+		case req := <-receiver:
+			response, err := app.TrySign(context.TODO(), req)
+			if err != nil {
+				logger.Default.Err(req, err)
+			} else {
+				logger.Default.Info(response)
+			}
 		}
+
 	}
 }

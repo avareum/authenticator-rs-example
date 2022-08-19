@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/avareum/avareum-hubble-signer/internal/signers/solana"
 	signerTypes "github.com/avareum/avareum-hubble-signer/internal/signers/types"
@@ -30,22 +29,18 @@ func NewTestTxPayload(suite *fixtures.TestSuite) []byte {
 func Test_App(t *testing.T) {
 
 	t.Run("should panic when missing secret manager", func(t *testing.T) {
-		suite := fixtures.NewTestSuite().Faucet()
+		suite := fixtures.NewTestSuite()
 		app := NewAppSigner()
-		require.Panics(t, func() {
-			app.Receive(context.TODO(), suite.MessageQueue)
-		}, "should panic")
+		_, err := app.TrySign(context.TODO(), suite.NewTestSignerRequest())
+		require.EqualError(t, err, "secret manager is not registered")
 	})
 
 	t.Run("should reject invalid signer id requested", func(t *testing.T) {
-		suite := fixtures.NewTestSuite().Faucet()
+		suite := fixtures.NewTestSuite()
 
 		app := NewAppSigner()
 		app.RegisterSecretManager(suite.SecretManager)
-		go app.Receive(context.TODO(), suite.MessageQueue)
-
-		// [hack] push mock request
-		go suite.MessageQueue.Push(signerTypes.SignerRequest{
+		_, err := app.TrySign(context.TODO(), signerTypes.SignerRequest{
 			Chain:     "solono",
 			ChainID:   "mainnet-beta",
 			Caller:    "",
@@ -54,12 +49,11 @@ func Test_App(t *testing.T) {
 			Signature: []byte{},
 		})
 
-		response := <-app.CreateDefaultSignerRequestedResponseHandler()
-		require.Regexp(t, "signer .* not found", response.Error.Error())
+		require.Regexp(t, "signer .* not found", err.Error())
 	})
 
 	t.Run("should reject mismatch service caller", func(t *testing.T) {
-		suite := fixtures.NewTestSuite().Faucet()
+		suite := fixtures.NewTestSuite()
 		suite.ACL.CreateTestServiceKey("caller-service")
 		suite.ACL.CreateTestServiceKey("unauthorize-service")
 
@@ -71,10 +65,7 @@ func Test_App(t *testing.T) {
 		app := NewAppSigner()
 		app.RegisterSecretManager(suite.SecretManager)
 		app.RegisterACL(suite.ACL)
-		go app.Receive(context.TODO(), suite.MessageQueue)
-
-		// [hack] push mock request
-		go suite.MessageQueue.Push(signerTypes.SignerRequest{
+		_, err = app.TrySign(context.TODO(), signerTypes.SignerRequest{
 			Chain:     "solana",
 			ChainID:   "mainnet-beta",
 			Caller:    "caller-service",
@@ -82,9 +73,7 @@ func Test_App(t *testing.T) {
 			Payload:   payload,
 			Signature: mismatchSignature,
 		})
-
-		response := <-app.CreateDefaultSignerRequestedResponseHandler()
-		require.Error(t, response.Error, "invalid caller signature")
+		require.EqualError(t, err, "invalid caller signature")
 	})
 
 	t.Run("should sign & broadcast valid request", func(t *testing.T) {
@@ -101,24 +90,6 @@ func Test_App(t *testing.T) {
 		payloadSignature, err := suite.ACL.SignPayload("caller-service", payload)
 		require.Nil(t, err)
 
-		// [hack] prepare cancel context
-		ctx, cancelCtx := context.WithCancel(context.Background())
-		go func() {
-			// [hack] push the request
-			suite.MessageQueue.Push(signerTypes.SignerRequest{
-				Chain:     "solana",
-				ChainID:   "mainnet-beta",
-				Caller:    "caller-service",
-				Fund:      suite.Solana.Fund.PublicKey().String(),
-				Payload:   payload,
-				Signature: payloadSignature,
-			})
-
-			// wait for the response
-			time.Sleep(5 * time.Second)
-			cancelCtx()
-		}()
-
 		app := NewAppSigner()
 		app.RegisterSecretManager(suite.SecretManager)
 		app.RegisterACL(suite.ACL)
@@ -128,12 +99,18 @@ func Test_App(t *testing.T) {
 		require.Nil(t, err)
 
 		// start long running receiving, signing, and broadcasting
-		go app.Receive(ctx, suite.MessageQueue)
+		response, err := app.TrySign(context.TODO(), signerTypes.SignerRequest{
+			Chain:     "solana",
+			ChainID:   "mainnet-beta",
+			Caller:    "caller-service",
+			Fund:      suite.Solana.Fund.PublicKey().String(),
+			Payload:   payload,
+			Signature: payloadSignature,
+		})
 
 		// wait for the response
-		response := <-app.CreateDefaultSignerRequestedResponseHandler()
-		require.Nil(t, response.Error)
+		require.Nil(t, err)
 		require.NotNil(t, response.Signatures)
-		require.Equal(t, 1, len(*response.Signatures))
+		require.Equal(t, 1, len(response.Signatures))
 	})
 }

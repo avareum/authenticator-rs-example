@@ -6,8 +6,7 @@ import (
 
 type SignerRequestedResponse struct {
 	Request    signerTypes.SignerRequest
-	Signatures *[]string
-	Error      error
+	Signatures []string
 }
 
 type SignerRequestedResponseHandler = chan SignerRequestedResponse

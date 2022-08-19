@@ -1,12 +1,10 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 
-	"github.com/avareum/avareum-hubble-signer/pkg/logger"
-	"github.com/avareum/avareum-hubble-signer/pkg/secret_manager"
-	"github.com/gagliardetto/solana-go"
+	"github.com/avareum/avareum-hubble-signer/internal/server/wallet"
+	"github.com/avareum/avareum-hubble-signer/internal/signers/types"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,26 +16,40 @@ func NewRestAPI() *RestAPI {
 
 // Serve starts the simplest rest api server
 func (api *RestAPI) Serve() {
+	walletHandler, err := wallet.NewFundWalletHandler()
+	if err != nil {
+		panic(err)
+	}
+
 	r := gin.Default()
 	v1 := r.Group("/v1")
 	{
-		v1.POST("/wallet/create", func(c *gin.Context) {
-			sm, err := secret_manager.NewGCPSecretManager()
+		v1.POST("/wallet/new", func(c *gin.Context) {
+			res, err := walletHandler.NewWallet()
 			if err != nil {
-				wallet := solana.NewWallet()
-				walletNamespace := fmt.Sprintf("WALLET_%s", wallet.PublicKey().String())
-				sm.Create(walletNamespace, wallet.PrivateKey)
 				c.JSON(http.StatusOK, gin.H{
-					"status": "OK",
-					"wallet": wallet.PublicKey().String(),
+					"status":   "OK",
+					"response": res,
 				})
 			}
-
-			logger.Default.Err(fmt.Sprintf("API: /fund/wallet/new: %v", err))
-
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"status": "FAILED",
 				"error":  "create new wallet failed",
+			})
+		})
+
+		v1.POST("/wallet/execute", func(c *gin.Context) {
+			// TODO: parse request body
+			res, err := walletHandler.Execute(&types.SignerRequest{})
+			if err != nil {
+				c.JSON(http.StatusOK, gin.H{
+					"status":   "OK",
+					"response": res,
+				})
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status": "FAILED",
+				"error":  "execute wallet failed",
 			})
 		})
 	}
