@@ -10,9 +10,9 @@
 - [x] reload ACL list before verifying payload signature
 - [x] GCP cloud log (hook from `SignerRequestedResponseHandler`)
 - [x] Signer app support partial signing
+- [x] implement fund wallet creation APIs (feature in `/http`)
+- [x] support both REST/PubSub endpoints
 - [ ] Solana signer unit tests
-- [ ] integrate with GCP pubsub (wait: `core`)
-- [ ] implement fund wallet creation APIs (feature in `/http`)
 - [ ] implement Ethereum signer
 
 ## Keystores

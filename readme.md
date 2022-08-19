@@ -9,7 +9,7 @@ See: [Notes](/note.md)
 ```mermaid
 sequenceDiagram
     autonumber
-    Core->>MessageQueue: Message data receive
+    Core-->>MessageQueue: Message data receive
     MessageQueue->>+App: Foward message data
     App->>+Signer: Parse message data <br/>to SignerRequest
     Note right of App: chain,id,fund,payload,<br/>signature,caller
