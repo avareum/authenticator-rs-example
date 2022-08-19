@@ -9,8 +9,9 @@ See: [Notes](/note.md)
 ```mermaid
 sequenceDiagram
     autonumber
-    Core-->>MessageQueue: Message data receive
-    MessageQueue->>+App: Foward message data
+    Core-->>Endpoints: Message data receive
+    Note left of Endpoints: support MQ/REST
+    Endpoints->>+App: Foward message data
     App->>+Signer: Parse message data <br/>to SignerRequest
     Note right of App: chain,id,fund,payload,<br/>signature,caller
     Signer->>ACL: Verify payload signature
@@ -19,5 +20,5 @@ sequenceDiagram
     Signer->>Signer: Decode payload & sign
     Signer->>Blockchain: Broadcast
     Signer->>-App: Return tx signatures
-    App-->>-MessageQueue: WIP: Publish tx status
+    App-->>-Endpoints: WIP: Publish tx status
 ```
