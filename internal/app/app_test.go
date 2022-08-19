@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/avareum/avareum-hubble-signer/internal/signers"
 	"github.com/avareum/avareum-hubble-signer/internal/signers/solana"
 	signerTypes "github.com/avareum/avareum-hubble-signer/internal/signers/types"
 	"github.com/avareum/avareum-hubble-signer/tests/fixtures"
@@ -44,7 +45,7 @@ func Test_App(t *testing.T) {
 			Chain:     "solono",
 			ChainID:   "mainnet-beta",
 			Caller:    "",
-			Fund:      "",
+			Wallet:    "",
 			Payload:   []byte{},
 			Signature: []byte{},
 		})
@@ -69,7 +70,7 @@ func Test_App(t *testing.T) {
 			Chain:     "solana",
 			ChainID:   "mainnet-beta",
 			Caller:    "caller-service",
-			Fund:      suite.Solana.Fund.PublicKey().String(),
+			Wallet:    suite.Solana.Fund.PublicKey().String(),
 			Payload:   payload,
 			Signature: mismatchSignature,
 		})
@@ -80,7 +81,7 @@ func Test_App(t *testing.T) {
 		suite := fixtures.NewTestSuite().Faucet()
 
 		// [hack] store fund key on secret manager
-		suite.SecretManager.Create(suite.Solana.Fund.PublicKey().String(), suite.Solana.Fund.PrivateKey)
+		suite.SecretManager.Create(signers.ToSignerWalletID(suite.Solana.Fund.PublicKey().String()), suite.Solana.Fund.PrivateKey)
 
 		// [hack] create service key on ACL
 		suite.ACL.CreateTestServiceKey("caller-service")
@@ -103,7 +104,7 @@ func Test_App(t *testing.T) {
 			Chain:     "solana",
 			ChainID:   "mainnet-beta",
 			Caller:    "caller-service",
-			Fund:      suite.Solana.Fund.PublicKey().String(),
+			Wallet:    suite.Solana.Fund.PublicKey().String(),
 			Payload:   payload,
 			Signature: payloadSignature,
 		})

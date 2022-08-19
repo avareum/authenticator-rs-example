@@ -46,7 +46,7 @@ func (s *SolanaSigner) Init() error {
 
 // SignTransaction sign a transaction with the signer's private key
 func (s *SolanaSigner) SignAndBroadcast(ctx context.Context, req types.SignerRequest) ([]string, error) {
-	fundSigner, err := s.getFundSignerKey(ctx, req.Fund)
+	fundSigner, err := s.getFundSignerKey(ctx, req.Wallet)
 	if err != nil {
 		return nil, err
 	}
@@ -73,8 +73,8 @@ func (s *SolanaSigner) SignAndBroadcast(ctx context.Context, req types.SignerReq
  Internal
 */
 
-func (s *SolanaSigner) getFundSignerKey(ctx context.Context, fund string) (solana.PrivateKey, error) {
-	raw, err := s.BaseSigner.FetchSignerRawKey(fund)
+func (s *SolanaSigner) getFundSignerKey(ctx context.Context, wallet string) (solana.PrivateKey, error) {
+	raw, err := s.BaseSigner.FetchSignerRawKey(wallet)
 	if err != nil {
 		return nil, err
 	}

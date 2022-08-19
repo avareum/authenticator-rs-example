@@ -7,6 +7,12 @@ import (
 	smTypes "github.com/avareum/avareum-hubble-signer/pkg/secret_manager/types"
 )
 
+const WALLET_PREFIX = "WALLET_"
+
+func ToSignerWalletID(wallet string) string {
+	return fmt.Sprintf("%s.%s", WALLET_PREFIX, wallet)
+}
+
 // Signer implementation checked against internal/signers/types/signer.go
 var _ types.Signer = (*BaseSigner)(nil)
 
@@ -27,5 +33,5 @@ func (b *BaseSigner) FetchSignerRawKey(id string) ([]byte, error) {
 	if b.sm == nil {
 		return nil, fmt.Errorf("secret manager is not set")
 	}
-	return b.sm.Get(id)
+	return b.sm.Get(ToSignerWalletID(id))
 }

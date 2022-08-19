@@ -26,7 +26,7 @@ type ServiceACL struct {
 func NewServiceACL() (*ServiceACL, error) {
 	return NewServiceACLWithOpt(ServiceACLOptions{
 		SkipFetchOnVerify: false,
-		Prefix:            "",
+		Prefix:            "SERVICE_",
 	})
 }
 

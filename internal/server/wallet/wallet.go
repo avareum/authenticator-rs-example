@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/avareum/avareum-hubble-signer/internal/app"
+	"github.com/avareum/avareum-hubble-signer/internal/signers"
 	"github.com/avareum/avareum-hubble-signer/internal/signers/ethereum"
 	"github.com/avareum/avareum-hubble-signer/internal/signers/solana"
 	"github.com/avareum/avareum-hubble-signer/internal/signers/types"
@@ -64,7 +65,7 @@ func (f *FundWalletHandler) NewWallet() (*NewWalletResponse, error) {
 	sm, err := secret_manager.NewGCPSecretManager()
 	if err != nil {
 		wallet := solanalib.NewWallet()
-		walletNamespace := fmt.Sprintf("WALLET_%s", wallet.PublicKey().String())
+		walletNamespace := fmt.Sprintf("%s%s", signers.WALLET_PREFIX, wallet.PublicKey().String())
 		sm.Create(walletNamespace, wallet.PrivateKey)
 		return &NewWalletResponse{
 			Wallet: wallet.PublicKey().String(),

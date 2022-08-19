@@ -18,11 +18,22 @@ type SignerRequest struct {
 	Chain     string
 	ChainID   string
 	Caller    string
-	Fund      string
+	Wallet    string
 	Payload   []byte
 	Signature []byte
 }
 
 func (s *SignerRequest) SignerID() string {
 	return fmt.Sprintf("%s.%s", s.Chain, s.ChainID)
+}
+
+func (s *SignerRequest) Copy() *SignerRequest {
+	return &SignerRequest{
+		Chain:     s.Chain,
+		ChainID:   s.ChainID,
+		Caller:    s.Caller,
+		Wallet:    s.Wallet,
+		Payload:   s.Payload,
+		Signature: s.Payload,
+	}
 }

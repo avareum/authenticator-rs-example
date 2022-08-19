@@ -31,7 +31,7 @@ func (t *TestSuite) NewTestSignerRequest() signerTypes.SignerRequest {
 		Chain:     "solana",
 		ChainID:   "mainnet-beta",
 		Caller:    "caller-service",
-		Fund:      t.Solana.Fund.PublicKey().String(),
+		Wallet:    t.Solana.Fund.PublicKey().String(),
 		Payload:   []byte{},
 		Signature: []byte{},
 	}
