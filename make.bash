@@ -4,13 +4,19 @@ set -e
 # tests
 
 tests() {
-    go test -timeout 300s ./...
+    go test -timeout 3000s ./...
+}
+
+gcp_build() {
+    gcloud builds submit --config=devtools/gcp/build.json
 }
 
 function usage {
     echo "Commands:"
     echo "-"
     echo ""
+    echo "Builds:"
+    echo "  gcp:build               build the project and store on gcp artifact"
     echo "Tests:"
     echo "  tests                   run all tests"
     echo ""
@@ -26,6 +32,7 @@ main() {
             exit 0
             ;;
         tests) tests;;
+        gcp:build) gcp_build;;
         *)
             usage
             exit 1

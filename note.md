@@ -12,6 +12,8 @@
 - [x] Signer app support partial signing
 - [x] implement fund wallet creation APIs (feature in `/http`)
 - [x] support both REST/PubSub endpoints
+- [ ] Deploy scripts
+- [ ] CI
 - [ ] Solana signer unit tests
 - [ ] implement Ethereum signer
 
