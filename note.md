@@ -7,15 +7,20 @@
 - [x] publish on-chain signature
 - [x] SignerApp unit tests
 - [x] ACL unit tests
-- [x] reload ACL list before verifying payload signature
+- [x] ~~reload ACL list before verifying payload signature~~
 - [x] GCP cloud log (hook from `SignerRequestedResponseHandler`)
-- [x] Signer app support partial signing
+- [x] signer app support partial signing
 - [x] implement fund wallet creation APIs (feature in `/http`)
 - [x] support both REST/PubSub endpoints
-- [ ] Deploy scripts
+- [x] solana signer unit tests
+- [x] implement Ethereum signer
+- [x] ethereum signer unit tests
+- [x] deploy scripts
 - [ ] CI
-- [ ] Solana signer unit tests
-- [ ] implement Ethereum signer
+- [ ] parse SignerRequest in `/internal/server/api/rest.go#42`
+- [ ] setting IAM
+  - [ ] read in `Keystores` section
+  - [ ] 0.0.0.0:8080 access availabled for core service
 
 ## Keystores
 
