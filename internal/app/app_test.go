@@ -78,7 +78,8 @@ func Test_App(t *testing.T) {
 	})
 
 	t.Run("should sign & broadcast valid request", func(t *testing.T) {
-		suite := fixtures.NewTestSuite().Faucet()
+		suite := fixtures.NewTestSuite()
+		suite.Solana.Faucet()
 
 		// [hack] store fund key on secret manager
 		suite.SecretManager.Create(signers.ToSignerWalletID(suite.Solana.Fund.PublicKey().String()), suite.Solana.Fund.PrivateKey)

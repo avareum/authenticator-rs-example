@@ -28,11 +28,11 @@ func (m *SolanaTestSuite) Sign(payload []byte) (solana.Signature, error) {
 	return m.Fund.PrivateKey.Sign(payload)
 }
 
-func (m *SolanaTestSuite) Airdrop() {
-	m.AirdropTo(m.Fund.PublicKey())
+func (m *SolanaTestSuite) Faucet() {
+	m.FaucetTo(m.Fund.PublicKey())
 }
 
-func (m *SolanaTestSuite) AirdropTo(to solana.PublicKey) {
+func (m *SolanaTestSuite) FaucetTo(to solana.PublicKey) {
 	sig, err := m.client.RequestAirdrop(context.TODO(), to, 10*lamports, rpc.CommitmentFinalized)
 	if err != nil {
 		log.Fatal(err)

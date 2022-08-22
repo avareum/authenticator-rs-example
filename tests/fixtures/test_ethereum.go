@@ -3,7 +3,6 @@ package fixtures
 import (
 	"context"
 	"crypto/ecdsa"
-	"fmt"
 	"log"
 	"math/big"
 
@@ -39,7 +38,6 @@ func (e *EthereumTestSuite) Init() error {
 	blockGasLimit := uint64(4712388)
 	client := backends.NewSimulatedBackend(genesisAlloc, blockGasLimit)
 	e.client = client
-	fmt.Println(e.client.BalanceAt(context.Background(), address, nil))
 	return nil
 }
 
@@ -51,7 +49,7 @@ func (e *EthereumTestSuite) MustNewWallet() *ecdsa.PrivateKey {
 	return privateKey
 }
 
-func (e *EthereumTestSuite) AirdropTo(to ecdsa.PublicKey) {
+func (e *EthereumTestSuite) FaucetTo(to ecdsa.PublicKey) {
 	tx := e.NewTransferTransaction(*e.coinbase, to, 10)
 	signedTx, err := types.SignTx(tx, types.HomesteadSigner{}, e.coinbase)
 	if err != nil {
@@ -59,7 +57,6 @@ func (e *EthereumTestSuite) AirdropTo(to ecdsa.PublicKey) {
 	}
 	e.client.SendTransaction(context.Background(), signedTx)
 	e.client.Commit()
-	fmt.Println(e.client.BalanceAt(context.Background(), crypto.PubkeyToAddress(to), nil))
 }
 
 func (e *EthereumTestSuite) SendTransaction(tx *types.Transaction) {
