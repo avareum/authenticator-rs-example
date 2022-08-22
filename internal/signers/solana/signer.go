@@ -13,7 +13,7 @@ import (
 type SolanaSigner struct {
 	signers.BaseSigner
 	opt       SolanaSignerOptions
-	decoder   SolanaTransactionDecoder
+	decoder   *SolanaTransactionDecoder
 	rpcclient *rpc.Client
 }
 
@@ -27,7 +27,7 @@ var _ types.Signer = (*SolanaSigner)(nil)
 func NewSolanaSigner(opt SolanaSignerOptions) *SolanaSigner {
 	s := &SolanaSigner{
 		opt:     opt,
-		decoder: SolanaTransactionDecoder{},
+		decoder: NewSolanaTransactionDecoder(),
 	}
 	return s
 }
@@ -50,7 +50,6 @@ func (s *SolanaSigner) SignAndBroadcast(ctx context.Context, req types.SignerReq
 	if err != nil {
 		return nil, err
 	}
-
 	tx, err := s.decoder.TryDecode(req.Payload)
 	if err != nil {
 		return nil, err

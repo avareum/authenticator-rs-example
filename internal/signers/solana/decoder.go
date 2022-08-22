@@ -25,13 +25,13 @@ func (d *SolanaTransactionDecoder) TryDecode(payload []byte) (*solana.Transactio
 	if err == nil {
 		return tx, nil
 	}
-	return nil, fmt.Errorf("SolanaSigner: unmarshal tx msg failed: %v", err)
+	return nil, fmt.Errorf("SolanaTransactionDecoder: unmarshal tx msg failed: %v", err)
 }
 
 func (d *SolanaTransactionDecoder) DecodeFromTransaction(payload []byte) (*solana.Transaction, error) {
 	tx, err := solana.TransactionFromDecoder(bin.NewBinDecoder(payload))
 	if err != nil {
-		return nil, fmt.Errorf("SolanaSigner: decode transaction failed: %v", err)
+		return nil, fmt.Errorf("SolanaTransactionDecoder: decode transaction failed: %v", err)
 	}
 	return tx, nil
 }
@@ -40,7 +40,7 @@ func (d *SolanaTransactionDecoder) DecodeFromBinary(payload []byte) (*solana.Tra
 	message := solana.Message{}
 	err := bin.UnmarshalBin(&message, payload)
 	if err != nil {
-		return nil, fmt.Errorf("SolanaSigner: unmarshal tx msg failed: %v", err)
+		return nil, fmt.Errorf("SolanaTransactionDecoder: unmarshal tx msg failed: %v", err)
 	}
 	tx := solana.Transaction{}
 	tx.Message = message

@@ -11,7 +11,7 @@ import (
 )
 
 func Test_SolanaTransactionDecoder(t *testing.T) {
-	t.Run("should decode tx", func(t *testing.T) {
+	t.Run("solana decoder", func(t *testing.T) {
 		suite := fixtures.NewTestSuite()
 		decoder := NewSolanaTransactionDecoder()
 		receiver := solana.NewWallet()
@@ -21,7 +21,7 @@ func Test_SolanaTransactionDecoder(t *testing.T) {
 			receiver.PublicKey(),
 		).Build())
 
-		t.Run("should decode encoded tx (partial signed)", func(t *testing.T) {
+		t.Run("should decode transaction", func(t *testing.T) {
 			bin, err := utils.MarshalBinarySolanaTransaction(originalTx)
 			require.Nil(t, err)
 
@@ -44,7 +44,7 @@ func Test_SolanaTransactionDecoder(t *testing.T) {
 			})
 		})
 
-		t.Run("should try decode encoded tx (partial signed)", func(t *testing.T) {
+		t.Run("should try decode transaction", func(t *testing.T) {
 			bin, err := utils.MarshalBinarySolanaTransaction(originalTx)
 			require.Nil(t, err)
 
@@ -67,7 +67,7 @@ func Test_SolanaTransactionDecoder(t *testing.T) {
 			})
 		})
 
-		t.Run("should decode encoded message binary (only message data)", func(t *testing.T) {
+		t.Run("should decode message bin", func(t *testing.T) {
 			bin, err := originalTx.Message.MarshalBinary()
 			require.Nil(t, err)
 
@@ -90,7 +90,7 @@ func Test_SolanaTransactionDecoder(t *testing.T) {
 			})
 		})
 
-		t.Run("should try decode encoded message binary (only message data)", func(t *testing.T) {
+		t.Run("should try decode message bin", func(t *testing.T) {
 			bin, err := originalTx.Message.MarshalBinary()
 			require.Nil(t, err)
 

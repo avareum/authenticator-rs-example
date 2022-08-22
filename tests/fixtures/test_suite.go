@@ -5,7 +5,9 @@ import (
 )
 
 type TestSuite struct {
-	Solana        *SolanaTestSuite
+	Solana   *SolanaTestSuite
+	Ethereum *EthereumTestSuite
+
 	MessageQueue  *TestMessageQueue
 	SecretManager *TestSecretManager
 	ACL           *TestACL
@@ -14,6 +16,7 @@ type TestSuite struct {
 func NewTestSuite() *TestSuite {
 	t := &TestSuite{
 		Solana:        NewSolanaTestSuite(),
+		Ethereum:      NewEthereumTestSuite(),
 		MessageQueue:  NewTestMessageQueue(),
 		SecretManager: NewTestSecretManager(),
 		ACL:           NewTestACL(),

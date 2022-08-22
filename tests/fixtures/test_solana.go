@@ -2,6 +2,7 @@ package fixtures
 
 import (
 	"context"
+	"log"
 
 	"github.com/avareum/avareum-hubble-signer/internal/utils"
 	"github.com/gagliardetto/solana-go"
@@ -34,7 +35,7 @@ func (m *SolanaTestSuite) Airdrop() {
 func (m *SolanaTestSuite) AirdropTo(to solana.PublicKey) {
 	sig, err := m.client.RequestAirdrop(context.TODO(), to, 10*lamports, rpc.CommitmentFinalized)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	utils.WaitSolanaTxConfirmed(m.client, sig)
 }
@@ -42,7 +43,7 @@ func (m *SolanaTestSuite) AirdropTo(to solana.PublicKey) {
 func (m *SolanaTestSuite) NewTx(ixs ...solana.Instruction) *solana.Transaction {
 	recent, err := m.client.GetRecentBlockhash(context.TODO(), rpc.CommitmentFinalized)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	tx, _ := solana.NewTransaction(
 		ixs,
