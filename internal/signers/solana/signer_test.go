@@ -19,10 +19,10 @@ func NewTestSigner() *SolanaSigner {
 	return s
 }
 
-func Test_SolanaDecoder(t *testing.T) {
+func Test_SolanaTransactionDecoder(t *testing.T) {
 	t.Run("should decode tx", func(t *testing.T) {
 		suite := fixtures.NewTestSuite()
-		signer := NewTestSigner()
+		decoder := NewSolanaTransactionDecoder()
 		receiver := solana.NewWallet()
 		originalTx := suite.Solana.NewTx(system.NewTransferInstruction(
 			100000,
@@ -34,7 +34,7 @@ func Test_SolanaDecoder(t *testing.T) {
 			bin, err := utils.MarshalBinarySolanaTransaction(originalTx)
 			require.Nil(t, err)
 
-			tx, err := signer.tryDecode(context.TODO(), bin)
+			tx, err := decoder.DecodeFromTransaction(bin)
 			require.Nil(t, err)
 			require.NotNil(t, tx)
 
@@ -50,21 +50,14 @@ func Test_SolanaDecoder(t *testing.T) {
 				program, err := tx.ResolveProgramIDIndex(tx.Message.Instructions[0].ProgramIDIndex)
 				require.Nil(t, err)
 				require.Equal(t, "11111111111111111111111111111111", program.String())
-			})
-
-			t.Run("should sign relay tx", func(t *testing.T) {
-				signatures, err := signer.sign(context.TODO(), tx, suite.Solana.Fund.PrivateKey)
-				require.Nil(t, err)
-				require.Nil(t, tx.VerifySignatures())
-				require.Equal(t, 1, len(signatures))
 			})
 		})
 
-		t.Run("should decode encode message (only message data)", func(t *testing.T) {
-			bin, err := originalTx.Message.MarshalBinary()
+		t.Run("should try decode encoded tx (partial signed)", func(t *testing.T) {
+			bin, err := utils.MarshalBinarySolanaTransaction(originalTx)
 			require.Nil(t, err)
 
-			tx, err := signer.tryDecode(context.TODO(), bin)
+			tx, err := decoder.TryDecode(bin)
 			require.Nil(t, err)
 			require.NotNil(t, tx)
 
@@ -81,13 +74,73 @@ func Test_SolanaDecoder(t *testing.T) {
 				require.Nil(t, err)
 				require.Equal(t, "11111111111111111111111111111111", program.String())
 			})
+		})
 
-			t.Run("should sign relay tx", func(t *testing.T) {
-				signatures, err := signer.sign(context.TODO(), tx, suite.Solana.Fund.PrivateKey)
-				require.Nil(t, err)
-				require.Nil(t, tx.VerifySignatures())
-				require.Equal(t, 1, len(signatures))
+		t.Run("should decode encoded message binary (only message data)", func(t *testing.T) {
+			bin, err := originalTx.Message.MarshalBinary()
+			require.Nil(t, err)
+
+			tx, err := decoder.DecodeFromBinary(bin)
+			require.Nil(t, err)
+			require.NotNil(t, tx)
+
+			t.Run("should contain instruction", func(t *testing.T) {
+				require.Equal(t, 1, len(tx.Message.Instructions))
 			})
+
+			t.Run("should contain accounts", func(t *testing.T) {
+				require.Equal(t, 3, len(tx.Message.AccountKeys))
+			})
+
+			t.Run("should contain system account (transfer SOL)", func(t *testing.T) {
+				program, err := tx.ResolveProgramIDIndex(tx.Message.Instructions[0].ProgramIDIndex)
+				require.Nil(t, err)
+				require.Equal(t, "11111111111111111111111111111111", program.String())
+			})
+		})
+
+		t.Run("should try decode encoded message binary (only message data)", func(t *testing.T) {
+			bin, err := originalTx.Message.MarshalBinary()
+			require.Nil(t, err)
+
+			tx, err := decoder.TryDecode(bin)
+			require.Nil(t, err)
+			require.NotNil(t, tx)
+
+			t.Run("should contain instruction", func(t *testing.T) {
+				require.Equal(t, 1, len(tx.Message.Instructions))
+			})
+
+			t.Run("should contain accounts", func(t *testing.T) {
+				require.Equal(t, 3, len(tx.Message.AccountKeys))
+			})
+
+			t.Run("should contain system account (transfer SOL)", func(t *testing.T) {
+				program, err := tx.ResolveProgramIDIndex(tx.Message.Instructions[0].ProgramIDIndex)
+				require.Nil(t, err)
+				require.Equal(t, "11111111111111111111111111111111", program.String())
+			})
+		})
+
+	})
+}
+
+func Test_SolanaSigner(t *testing.T) {
+	t.Run("should sign payload", func(t *testing.T) {
+		suite := fixtures.NewTestSuite()
+		signer := NewTestSigner()
+		receiver := solana.NewWallet()
+		originalTx := suite.Solana.NewTx(system.NewTransferInstruction(
+			100000,
+			suite.Solana.Fund.PublicKey(),
+			receiver.PublicKey(),
+		).Build())
+
+		t.Run("should sign relay tx", func(t *testing.T) {
+			signatures, err := signer.sign(context.TODO(), originalTx, suite.Solana.Fund.PrivateKey)
+			require.Nil(t, err)
+			require.Nil(t, originalTx.VerifySignatures())
+			require.Equal(t, 1, len(signatures))
 		})
 
 	})

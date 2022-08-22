@@ -2,12 +2,10 @@ package solana
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/avareum/avareum-hubble-signer/internal/signers"
 	"github.com/avareum/avareum-hubble-signer/internal/signers/types"
 	"github.com/avareum/avareum-hubble-signer/internal/utils"
-	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 )
@@ -15,6 +13,7 @@ import (
 type SolanaSigner struct {
 	signers.BaseSigner
 	opt       SolanaSignerOptions
+	decoder   SolanaTransactionDecoder
 	rpcclient *rpc.Client
 }
 
@@ -27,7 +26,8 @@ var _ types.Signer = (*SolanaSigner)(nil)
 
 func NewSolanaSigner(opt SolanaSignerOptions) *SolanaSigner {
 	s := &SolanaSigner{
-		opt: opt,
+		opt:     opt,
+		decoder: SolanaTransactionDecoder{},
 	}
 	return s
 }
@@ -51,7 +51,7 @@ func (s *SolanaSigner) SignAndBroadcast(ctx context.Context, req types.SignerReq
 		return nil, err
 	}
 
-	tx, err := s.tryDecode(ctx, req.Payload)
+	tx, err := s.decoder.TryDecode(req.Payload)
 	if err != nil {
 		return nil, err
 	}
@@ -79,40 +79,6 @@ func (s *SolanaSigner) getFundSignerKey(ctx context.Context, wallet string) (sol
 		return nil, err
 	}
 	return solana.PrivateKey([]byte(raw)), nil
-}
-
-func (s *SolanaSigner) tryDecode(ctx context.Context, payload []byte) (*solana.Transaction, error) {
-	// try to marshal whole tx first
-	tx, err := s.decodeTx(ctx, payload)
-	if err == nil {
-		return tx, nil
-	}
-
-	// otherwise, try to unmarshal only tx message
-	tx, err = s.decode(ctx, payload)
-	if err == nil {
-		return tx, nil
-	}
-	return nil, fmt.Errorf("SolanaSigner: unmarshal tx msg failed: %v", err)
-}
-
-func (s *SolanaSigner) decode(ctx context.Context, payload []byte) (*solana.Transaction, error) {
-	message := solana.Message{}
-	err := bin.UnmarshalBin(&message, payload)
-	if err != nil {
-		return nil, fmt.Errorf("SolanaSigner: unmarshal tx msg failed: %v", err)
-	}
-	tx := solana.Transaction{}
-	tx.Message = message
-	return &tx, nil
-}
-
-func (s *SolanaSigner) decodeTx(ctx context.Context, payload []byte) (*solana.Transaction, error) {
-	tx, err := solana.TransactionFromDecoder(bin.NewBinDecoder(payload))
-	if err != nil {
-		return nil, fmt.Errorf("SolanaSigner: decode transaction failed: %v", err)
-	}
-	return tx, nil
 }
 
 func (s *SolanaSigner) sign(ctx context.Context, tx *solana.Transaction, account solana.PrivateKey) ([]solana.Signature, error) {
