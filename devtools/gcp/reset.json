@@ -1,0 +1,14 @@
+{
+  "steps": [
+    {
+      "name": "gcr.io/cloud-builders/gcloud",
+      "args": [
+        "compute",
+        "instances",
+        "reset",
+        "signer-app",
+        "--zone=asia-southeast1-b"
+      ]
+    }
+  ]
+}
