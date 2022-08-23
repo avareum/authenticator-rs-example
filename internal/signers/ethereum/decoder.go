@@ -1,8 +1,10 @@
 package ethereum
 
 import (
+	"encoding/hex"
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
@@ -51,4 +53,25 @@ func (d *EthereumTransactionDecoder) DecodeFromJSON(payload []byte) (*types.Tran
 		return nil, err
 	}
 	return tx, nil
+}
+
+func (d *EthereumTransactionDecoder) GetMethodSignature(tx *types.Transaction) ([]byte, error) {
+	return GetMethodSignature(hex.EncodeToString(tx.Data()))
+}
+
+func (d *EthereumTransactionDecoder) GetInputData(abi abi.ABI, tx *types.Transaction) ([]interface{}, error) {
+	rawHex := hex.EncodeToString(tx.Data())
+	sig, err := GetMethodSignature(rawHex)
+	if err != nil {
+		return nil, err
+	}
+	method, err := abi.MethodById(sig)
+	if err != nil {
+		return nil, err
+	}
+	inputData, err := GetInputData(rawHex)
+	if err != nil {
+		return nil, err
+	}
+	return method.Inputs.Unpack(inputData)
 }

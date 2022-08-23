@@ -1,21 +1,23 @@
 package ethereum
 
 import (
+	hexlib "encoding/hex"
 	"errors"
-
-	"github.com/ethereum/go-ethereum/common"
+	"strings"
 )
 
-func GetMethodSignature(bytecode string) ([]byte, error) {
-	if len(bytecode) < 10 {
-		return nil, errors.New("invalid bytecode")
+func GetMethodSignature(hex string) ([]byte, error) {
+	hex = strings.TrimPrefix(hex, "0x")
+	if len(hex) < 8 {
+		return nil, errors.New("invalid hex")
 	}
-	return common.Hex2Bytes(bytecode[2:10]), nil
+	return hexlib.DecodeString(hex[:8])
 }
 
-func GetInputData(bytecode string) ([]byte, error) {
-	if len(bytecode) <= 10 {
-		return nil, errors.New("invalid bytecode")
+func GetInputData(hex string) ([]byte, error) {
+	hex = strings.TrimPrefix(hex, "0x")
+	if len(hex) <= 8 {
+		return nil, errors.New("invalid hex")
 	}
-	return common.Hex2Bytes(bytecode[10:]), nil
+	return hexlib.DecodeString(hex[8:])
 }
