@@ -7,6 +7,7 @@ import (
 	"github.com/avareum/avareum-hubble-signer/internal/signers"
 	"github.com/avareum/avareum-hubble-signer/internal/signers/solana"
 	signerTypes "github.com/avareum/avareum-hubble-signer/internal/signers/types"
+	"github.com/avareum/avareum-hubble-signer/internal/types"
 	"github.com/avareum/avareum-hubble-signer/tests/fixtures"
 	solanalib "github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/system"
@@ -42,8 +43,7 @@ func Test_App(t *testing.T) {
 		app := NewAppSigner()
 		app.RegisterSecretManager(suite.SecretManager)
 		_, err := app.TrySign(context.TODO(), signerTypes.SignerRequest{
-			Chain:     "solono",
-			ChainID:   "mainnet-beta",
+			Chain:     types.NewChain("solono", "mainnet-beta"),
 			Caller:    "",
 			Wallet:    "",
 			Payload:   []byte{},
@@ -67,8 +67,7 @@ func Test_App(t *testing.T) {
 		app.RegisterSecretManager(suite.SecretManager)
 		app.RegisterACL(suite.ACL)
 		_, err = app.TrySign(context.TODO(), signerTypes.SignerRequest{
-			Chain:     "solana",
-			ChainID:   "mainnet-beta",
+			Chain:     types.NewChain("solana", "mainnet-beta"),
 			Caller:    "caller-service",
 			Wallet:    suite.Solana.Fund.PublicKey().String(),
 			Payload:   payload,
@@ -102,8 +101,7 @@ func Test_App(t *testing.T) {
 
 		// start long running receiving, signing, and broadcasting
 		response, err := app.TrySign(context.TODO(), signerTypes.SignerRequest{
-			Chain:     "solana",
-			ChainID:   "mainnet-beta",
+			Chain:     types.NewChain("solana", "mainnet-beta"),
 			Caller:    "caller-service",
 			Wallet:    suite.Solana.Fund.PublicKey().String(),
 			Payload:   payload,

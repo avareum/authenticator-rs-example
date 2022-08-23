@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/avareum/avareum-hubble-signer/pkg/logger/types"
 )
@@ -15,13 +15,13 @@ func NewLocalLogger() *LocalLogger {
 }
 
 func (l *LocalLogger) Info(a ...any) {
-	fmt.Println(a...)
+	log.Println(append([]any{"INFO:"}, a...)...)
 }
 
 func (l *LocalLogger) Warn(a ...any) {
-	fmt.Println(a...)
+	log.Println(append([]any{"WARN:"}, a...)...)
 }
 
 func (l *LocalLogger) Err(a ...any) {
-	fmt.Println(a...)
+	log.Println(append([]any{"ERR:"}, a...)...)
 }

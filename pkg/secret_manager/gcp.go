@@ -22,7 +22,7 @@ type GCPSecretManagerOptions struct {
 
 func NewGCPSecretManager() (types.SecretManager, error) {
 	return NewGCPSecretManagerWithOpt(GCPSecretManagerOptions{
-		ProjectID: os.Getenv("GCP_PROJECT"),
+		ProjectID: os.Getenv("PROJECT_ID"),
 	})
 }
 

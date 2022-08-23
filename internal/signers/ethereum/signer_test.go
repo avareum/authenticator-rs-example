@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/avareum/avareum-hubble-signer/internal/signers/ethereum/types"
 	"github.com/avareum/avareum-hubble-signer/tests/fixtures"
 	"github.com/test-go/testify/require"
 )
@@ -12,8 +13,8 @@ func Test_EthereumSigner(t *testing.T) {
 	t.Run("should sign payload", func(t *testing.T) {
 		suite := fixtures.NewTestSuite()
 		signer := NewEthereumSigner(EthereumSignerOptions{})
-		sender := suite.Ethereum.MustNewWallet()
-		receiver := suite.Ethereum.MustNewWallet()
+		sender := types.MustNewEthereumKey()
+		receiver := types.MustNewEthereumKey()
 		originalTx := suite.Ethereum.NewTransferTransaction(*sender, receiver.PublicKey, 1)
 
 		t.Run("should sign relay tx", func(t *testing.T) {

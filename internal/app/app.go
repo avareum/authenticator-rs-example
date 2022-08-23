@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	signerTypes "github.com/avareum/avareum-hubble-signer/internal/signers/types"
-	"github.com/avareum/avareum-hubble-signer/internal/types"
 	aclTypes "github.com/avareum/avareum-hubble-signer/pkg/acl/types"
 	smTypes "github.com/avareum/avareum-hubble-signer/pkg/secret_manager/types"
 )
@@ -42,7 +41,7 @@ func (a *AppSigner) AddSigners(signers ...signerTypes.Signer) error {
 	return nil
 }
 
-func (a *AppSigner) TrySign(ctx context.Context, req signerTypes.SignerRequest) (*types.SignerRequestedResponse, error) {
+func (a *AppSigner) TrySign(ctx context.Context, req signerTypes.SignerRequest) (*signerTypes.SignerRequestedResponse, error) {
 	// register secret manager to all signer
 	if a.sm == nil {
 		return nil, fmt.Errorf("secret manager is not registered")
@@ -56,17 +55,17 @@ func (a *AppSigner) TrySign(ctx context.Context, req signerTypes.SignerRequest) 
 		return nil, fmt.Errorf("invalid caller signature")
 	}
 
-	if signer, isExists := a.Signers[req.SignerID()]; isExists {
+	if signer, isExists := a.Signers[req.Chain.ID()]; isExists {
 		sigs, err := signer.SignAndBroadcast(ctx, req)
 		if err != nil {
 			return nil, err
 		} else {
-			return &types.SignerRequestedResponse{
+			return &signerTypes.SignerRequestedResponse{
 				Request:    req,
 				Signatures: sigs,
 			}, nil
 		}
 	} else {
-		return nil, fmt.Errorf("signer %s not found", req.SignerID())
+		return nil, fmt.Errorf("signer %s not found", req.Chain.ID())
 	}
 }

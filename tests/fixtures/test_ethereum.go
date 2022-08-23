@@ -6,10 +6,11 @@ import (
 	"log"
 	"math/big"
 
+	"github.com/avareum/avareum-hubble-signer/internal/signers/ethereum/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/types"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
@@ -25,7 +26,7 @@ func NewEthereumTestSuite() *EthereumTestSuite {
 }
 
 func (e *EthereumTestSuite) Init() error {
-	e.coinbase = e.MustNewWallet()
+	e.coinbase = types.MustNewEthereumKey()
 	balance := new(big.Int)
 	balance.SetString("10000000000000000000000", 10) // 10k eth in wei
 
@@ -41,17 +42,9 @@ func (e *EthereumTestSuite) Init() error {
 	return nil
 }
 
-func (e *EthereumTestSuite) MustNewWallet() *ecdsa.PrivateKey {
-	privateKey, err := crypto.GenerateKey()
-	if err != nil {
-		log.Fatal(err)
-	}
-	return privateKey
-}
-
 func (e *EthereumTestSuite) FaucetTo(to ecdsa.PublicKey) {
 	tx := e.NewTransferTransaction(*e.coinbase, to, 10)
-	signedTx, err := types.SignTx(tx, types.HomesteadSigner{}, e.coinbase)
+	signedTx, err := ethtypes.SignTx(tx, ethtypes.HomesteadSigner{}, e.coinbase)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,16 +52,16 @@ func (e *EthereumTestSuite) FaucetTo(to ecdsa.PublicKey) {
 	e.client.Commit()
 }
 
-func (e *EthereumTestSuite) SendTransaction(tx *types.Transaction) {
+func (e *EthereumTestSuite) SendTransaction(tx *ethtypes.Transaction) {
 	e.client.SendTransaction(context.Background(), tx)
 	e.client.Commit()
 }
 
-func (e *EthereumTestSuite) TransactionReceipt(hash common.Hash) (*types.Receipt, error) {
+func (e *EthereumTestSuite) TransactionReceipt(hash common.Hash) (*ethtypes.Receipt, error) {
 	return e.client.TransactionReceipt(context.Background(), hash)
 }
 
-func (e *EthereumTestSuite) NewTransferTransaction(from ecdsa.PrivateKey, to ecdsa.PublicKey, amount int64) *types.Transaction {
+func (e *EthereumTestSuite) NewTransferTransaction(from ecdsa.PrivateKey, to ecdsa.PublicKey, amount int64) *ethtypes.Transaction {
 	toAddress := crypto.PubkeyToAddress(to)
 	nonce, err := e.client.PendingNonceAt(context.Background(), crypto.PubkeyToAddress(from.PublicKey))
 	if err != nil {
@@ -81,6 +74,6 @@ func (e *EthereumTestSuite) NewTransferTransaction(from ecdsa.PrivateKey, to ecd
 	if err != nil {
 		log.Fatal(err)
 	}
-	tx := types.NewTransaction(nonce, toAddress, ethAmount.Mul(ethAmount, weiValue), gasLimit, gasPrice, nil)
+	tx := ethtypes.NewTransaction(nonce, toAddress, ethAmount.Mul(ethAmount, weiValue), gasLimit, gasPrice, nil)
 	return tx
 }

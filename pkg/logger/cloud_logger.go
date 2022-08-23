@@ -20,7 +20,7 @@ type GCPCloudLogger struct {
 }
 
 func NewGCPCloudLogger(namespace string) (*GCPCloudLogger, error) {
-	client, err := logging.NewClient(context.TODO(), os.Getenv("GCP_PROJECT"))
+	client, err := logging.NewClient(context.TODO(), fmt.Sprintf("projects/%s", os.Getenv("PROJECT_ID")))
 	if err != nil {
 		return nil, fmt.Errorf("GCPCloudLogger: failed to create client: %v", err)
 	}

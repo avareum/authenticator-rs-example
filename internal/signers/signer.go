@@ -10,7 +10,7 @@ import (
 const WALLET_PREFIX = "WALLET_"
 
 func ToSignerWalletID(wallet string) string {
-	return fmt.Sprintf("%s.%s", WALLET_PREFIX, wallet)
+	return fmt.Sprintf("%s%s", WALLET_PREFIX, wallet)
 }
 
 // Signer implementation checked against internal/signers/types/signer.go

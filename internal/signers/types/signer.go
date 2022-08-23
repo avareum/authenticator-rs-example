@@ -2,8 +2,8 @@ package types
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/avareum/avareum-hubble-signer/internal/types"
 	smTypes "github.com/avareum/avareum-hubble-signer/pkg/secret_manager/types"
 )
 
@@ -15,25 +15,26 @@ type Signer interface {
 }
 
 type SignerRequest struct {
-	Chain     string
-	ChainID   string
+	Chain     types.Chain
 	Caller    string
 	Wallet    string
 	Payload   []byte
 	Signature []byte
 }
 
-func (s *SignerRequest) SignerID() string {
-	return fmt.Sprintf("%s.%s", s.Chain, s.ChainID)
-}
-
 func (s *SignerRequest) Copy() *SignerRequest {
 	return &SignerRequest{
 		Chain:     s.Chain,
-		ChainID:   s.ChainID,
 		Caller:    s.Caller,
 		Wallet:    s.Wallet,
 		Payload:   s.Payload,
 		Signature: s.Payload,
 	}
 }
+
+type SignerRequestedResponse struct {
+	Request    SignerRequest
+	Signatures []string
+}
+
+type SignerRequestedResponseHandler = chan SignerRequestedResponse
