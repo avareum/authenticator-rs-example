@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/avareum/avareum-hubble-signer/constant"
 	"github.com/avareum/avareum-hubble-signer/internal/app"
-	"github.com/avareum/avareum-hubble-signer/internal/signers"
 	"github.com/avareum/avareum-hubble-signer/internal/signers/ethereum"
 	ethtypes "github.com/avareum/avareum-hubble-signer/internal/signers/ethereum/types"
 	"github.com/avareum/avareum-hubble-signer/internal/signers/solana"
@@ -14,6 +14,7 @@ import (
 	"github.com/avareum/avareum-hubble-signer/internal/types"
 	"github.com/avareum/avareum-hubble-signer/pkg/acl"
 	"github.com/avareum/avareum-hubble-signer/pkg/secret_manager"
+	smtypes "github.com/avareum/avareum-hubble-signer/pkg/secret_manager/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	solanalib "github.com/gagliardetto/solana-go"
 )
@@ -79,17 +80,22 @@ func (f *FundWalletHandler) NewWallet(req NewWalletRequest) (*NewWalletResponse,
 	if err != nil {
 		return nil, err
 	}
+
 	var priv []byte
 	var wallet string
+	// Create a new keypair of specific chain.
+	// Derive keypair priv into raw key.
+	// Store raw key as a payload in secret manager.
+	// Label the secret with the prefix and wallet name which `WALLET_{wallet}`.
 	switch req.Chain.ID() {
-	case "ethereum.1":
+	case constant.EthereumMainnet.ID():
 		ethKey, err := ethtypes.NewEthereumKey()
 		if err != nil {
 			return nil, err
 		}
 		priv = crypto.FromECDSA(ethKey)
 		wallet = crypto.PubkeyToAddress(ethKey.PublicKey).Hex()
-	case "solana.mainnet-beta":
+	case constant.SolanaMainnetBeta.ID():
 		solanaKey, err := solanalib.NewRandomPrivateKey()
 		if err != nil {
 			return nil, err
@@ -99,8 +105,7 @@ func (f *FundWalletHandler) NewWallet(req NewWalletRequest) (*NewWalletResponse,
 	default:
 		return nil, fmt.Errorf("unknown chain %s", req.Chain.ID())
 	}
-
-	_, err = sm.Create(fmt.Sprintf("%s%s", signers.WALLET_PREFIX, wallet), priv)
+	err = sm.Create(smtypes.NewSecretWallet(wallet), priv)
 	if err != nil {
 		return nil, err
 	}

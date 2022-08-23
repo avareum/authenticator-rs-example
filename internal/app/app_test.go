@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/avareum/avareum-hubble-signer/internal/signers"
 	"github.com/avareum/avareum-hubble-signer/internal/signers/solana"
 	signerTypes "github.com/avareum/avareum-hubble-signer/internal/signers/types"
 	"github.com/avareum/avareum-hubble-signer/internal/types"
+	smtypes "github.com/avareum/avareum-hubble-signer/pkg/secret_manager/types"
 	"github.com/avareum/avareum-hubble-signer/tests/fixtures"
 	solanalib "github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/system"
@@ -81,7 +81,10 @@ func Test_App(t *testing.T) {
 		suite.Solana.Faucet()
 
 		// [hack] store fund key on secret manager
-		suite.SecretManager.Create(signers.ToSignerWalletID(suite.Solana.Fund.PublicKey().String()), suite.Solana.Fund.PrivateKey)
+		suite.SecretManager.Create(
+			smtypes.NewSecretWallet(suite.Solana.Fund.PublicKey().String()),
+			suite.Solana.Fund.PrivateKey,
+		)
 
 		// [hack] create service key on ACL
 		suite.ACL.CreateTestServiceKey("caller-service")

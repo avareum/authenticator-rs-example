@@ -2,25 +2,24 @@ package acl
 
 import (
 	"crypto/ed25519"
-	"fmt"
 	"log"
 
 	"github.com/avareum/avareum-hubble-signer/pkg/acl/types"
 	"github.com/avareum/avareum-hubble-signer/pkg/secret_manager"
-	smTypes "github.com/avareum/avareum-hubble-signer/pkg/secret_manager/types"
+	smtypes "github.com/avareum/avareum-hubble-signer/pkg/secret_manager/types"
 	"github.com/gagliardetto/solana-go"
 )
 
 type ServiceACLOptions struct {
 	SkipFetchOnVerify bool
 	Prefix            string
-	SecretManager     smTypes.SecretManager
+	SecretManager     smtypes.SecretManager
 }
 
 type ServiceACL struct {
 	types.ACL
 	opt ServiceACLOptions
-	sm  smTypes.SecretManager
+	sm  smtypes.SecretManager
 }
 
 func NewServiceACL() (*ServiceACL, error) {
@@ -56,7 +55,7 @@ func (w *ServiceACL) init() error {
 
 // getServiceKey returns the public key for the given service name.
 func (w *ServiceACL) getServiceKey(serviceName string) []byte {
-	p, err := w.sm.Get(fmt.Sprintf("%s%s", w.opt.Prefix, serviceName))
+	p, err := w.sm.Get(smtypes.NewSecretServiceID(serviceName))
 	if err != nil {
 		return []byte{}
 	}

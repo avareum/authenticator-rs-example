@@ -8,7 +8,7 @@ import (
 )
 
 type Signer interface {
-	ID() string
+	Chain() types.Chain
 	Init() error
 	WithSecretManager(sm smTypes.SecretManager)
 	SignAndBroadcast(ctx context.Context, req SignerRequest) ([]string, error)

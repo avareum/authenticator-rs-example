@@ -36,7 +36,7 @@ func (a *AppSigner) AddSigners(signers ...signerTypes.Signer) error {
 		if err != nil {
 			return err
 		}
-		a.Signers[s.ID()] = s
+		a.Signers[s.Chain().ID()] = s
 	}
 	return nil
 }

@@ -14,6 +14,6 @@ func NewChain(name string, cluster string) Chain {
 	}
 }
 
-func (c *Chain) ID() string {
+func (c Chain) ID() string {
 	return fmt.Sprintf("%s.%s", c.name, c.cluster)
 }

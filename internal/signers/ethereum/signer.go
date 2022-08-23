@@ -4,8 +4,10 @@ import (
 	"context"
 	"crypto/ecdsa"
 
+	"github.com/avareum/avareum-hubble-signer/constant"
 	"github.com/avareum/avareum-hubble-signer/internal/signers"
-	"github.com/avareum/avareum-hubble-signer/internal/signers/types"
+	signertypes "github.com/avareum/avareum-hubble-signer/internal/signers/types"
+	"github.com/avareum/avareum-hubble-signer/internal/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -23,7 +25,7 @@ type EthereumSignerOptions struct {
 }
 
 // Signer implementation checked against internal/signers/types/signer.go
-var _ types.Signer = (*EthereumSigner)(nil)
+var _ signertypes.Signer = (*EthereumSigner)(nil)
 
 func NewEthereumSigner(opt EthereumSignerOptions) *EthereumSigner {
 	s := &EthereumSigner{
@@ -33,10 +35,12 @@ func NewEthereumSigner(opt EthereumSignerOptions) *EthereumSigner {
 	return s
 }
 
-func (s *EthereumSigner) ID() string {
-	return "ethereum.1"
+// Chain returns the signer's chain
+func (s *EthereumSigner) Chain() types.Chain {
+	return constant.EthereumMainnet
 }
 
+// Init create a new rpc client
 func (s *EthereumSigner) Init() error {
 	client, err := ethclient.Dial(s.opt.RPC)
 	if err != nil {
@@ -46,7 +50,8 @@ func (s *EthereumSigner) Init() error {
 	return nil
 }
 
-func (s *EthereumSigner) SignAndBroadcast(ctx context.Context, req types.SignerRequest) ([]string, error) {
+// SignTransaction sign a transaction with the signer's private key
+func (s *EthereumSigner) SignAndBroadcast(ctx context.Context, req signertypes.SignerRequest) ([]string, error) {
 	priv, err := s.getSigningKey(ctx, req.Wallet)
 	if err != nil {
 		return nil, err

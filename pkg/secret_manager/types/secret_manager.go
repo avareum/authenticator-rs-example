@@ -1,6 +1,6 @@
 package types
 
 type SecretManager interface {
-	Create(id string, payload []byte) (string, error)
-	Get(id string) ([]byte, error)
+	Create(sid SecretID, payload []byte) error
+	Get(sid SecretID) ([]byte, error)
 }

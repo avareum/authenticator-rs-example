@@ -2,25 +2,25 @@ package types
 
 import "fmt"
 
-type SecretItem struct {
+type SecretID struct {
 	prefix string
 	id     string
 }
 
-func NewSecretItem(id string) SecretItem {
-	return SecretItem{
+func NewSecretWallet(id string) SecretID {
+	return SecretID{
 		prefix: "WALLET_",
 		id:     id,
 	}
 }
 
-func NewSecretService(id string) SecretItem {
-	return SecretItem{
+func NewSecretServiceID(id string) SecretID {
+	return SecretID{
 		prefix: "SERVICE_",
 		id:     id,
 	}
 }
 
-func (w *SecretItem) ID() string {
+func (w *SecretID) ID() string {
 	return fmt.Sprintf("%s%s", w.prefix, w.id)
 }

@@ -4,6 +4,7 @@ import (
 	"crypto/ed25519"
 	"testing"
 
+	"github.com/avareum/avareum-hubble-signer/pkg/secret_manager/types"
 	"github.com/avareum/avareum-hubble-signer/tests/fixtures"
 	"github.com/gagliardetto/solana-go"
 	"github.com/test-go/testify/require"
@@ -79,7 +80,7 @@ func Test_SignatureVerification(t *testing.T) {
 		require.Nil(t, err)
 
 		// [hack] create service key
-		sm.Create("SERVICE_service1", service1)
+		sm.Create(types.NewSecretServiceID("service1"), service1)
 
 		tests := []CanCallTestCase{
 			{

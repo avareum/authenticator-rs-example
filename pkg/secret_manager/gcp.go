@@ -46,10 +46,10 @@ func (s *GCPSecretManager) init() error {
 	return nil
 }
 
-func (s *GCPSecretManager) Create(id string, payload []byte) (string, error) {
+func (s *GCPSecretManager) Create(sid types.SecretID, payload []byte) error {
 	createSecretReq := &secretmanagerpb.CreateSecretRequest{
 		Parent:   fmt.Sprintf("projects/%s", s.opt.ProjectID),
-		SecretId: id,
+		SecretId: sid.ID(),
 		Secret: &secretmanagerpb.Secret{
 			Replication: &secretmanagerpb.Replication{
 				Replication: &secretmanagerpb.Replication_Automatic_{
@@ -61,7 +61,7 @@ func (s *GCPSecretManager) Create(id string, payload []byte) (string, error) {
 
 	secret, err := s.client.CreateSecret(context.TODO(), createSecretReq)
 	if err != nil {
-		return "", fmt.Errorf("GCPSecretManager: failed to create secret: %v", err)
+		return fmt.Errorf("GCPSecretManager: failed to create secret: %v", err)
 	}
 
 	// Build the request.
@@ -73,18 +73,18 @@ func (s *GCPSecretManager) Create(id string, payload []byte) (string, error) {
 	}
 
 	// Call the API.
-	version, err := s.client.AddSecretVersion(context.TODO(), addSecretVersionReq)
+	_, err = s.client.AddSecretVersion(context.TODO(), addSecretVersionReq)
 	if err != nil {
-		return "", fmt.Errorf("GCPSecretManager: failed to add secret version: %v", err)
+		return fmt.Errorf("GCPSecretManager: failed to add secret version: %v", err)
 	}
 
-	return version.Name, nil
+	return nil
 }
 
-func (s *GCPSecretManager) Get(id string) ([]byte, error) {
+func (s *GCPSecretManager) Get(sid types.SecretID) ([]byte, error) {
 	// Build the request.
 	accessRequest := &secretmanagerpb.AccessSecretVersionRequest{
-		Name: fmt.Sprintf("projects/%s/secrets/%s/versions/latest", s.opt.ProjectID, id),
+		Name: fmt.Sprintf("projects/%s/secrets/%s/versions/latest", s.opt.ProjectID, sid.ID()),
 	}
 
 	// Call the API.

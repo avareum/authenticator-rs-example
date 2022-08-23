@@ -3,8 +3,10 @@ package solana
 import (
 	"context"
 
+	"github.com/avareum/avareum-hubble-signer/constant"
 	"github.com/avareum/avareum-hubble-signer/internal/signers"
-	"github.com/avareum/avareum-hubble-signer/internal/signers/types"
+	signertypes "github.com/avareum/avareum-hubble-signer/internal/signers/types"
+	"github.com/avareum/avareum-hubble-signer/internal/types"
 	"github.com/avareum/avareum-hubble-signer/internal/utils"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
@@ -22,7 +24,7 @@ type SolanaSignerOptions struct {
 }
 
 // Signer implementation checked against internal/signers/types/signer.go
-var _ types.Signer = (*SolanaSigner)(nil)
+var _ signertypes.Signer = (*SolanaSigner)(nil)
 
 func NewSolanaSigner(opt SolanaSignerOptions) *SolanaSigner {
 	s := &SolanaSigner{
@@ -32,9 +34,9 @@ func NewSolanaSigner(opt SolanaSignerOptions) *SolanaSigner {
 	return s
 }
 
-// ID returns the signer's ID
-func (s *SolanaSigner) ID() string {
-	return "solana.mainnet-beta"
+// Chain returns the signer's chain
+func (s *SolanaSigner) Chain() types.Chain {
+	return constant.SolanaMainnetBeta
 }
 
 // Init create a new rpc & websocket client (used for confirming transactions)
@@ -45,7 +47,7 @@ func (s *SolanaSigner) Init() error {
 }
 
 // SignTransaction sign a transaction with the signer's private key
-func (s *SolanaSigner) SignAndBroadcast(ctx context.Context, req types.SignerRequest) ([]string, error) {
+func (s *SolanaSigner) SignAndBroadcast(ctx context.Context, req signertypes.SignerRequest) ([]string, error) {
 	fundSigner, err := s.getFundSignerKey(ctx, req.Wallet)
 	if err != nil {
 		return nil, err

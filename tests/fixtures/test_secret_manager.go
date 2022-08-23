@@ -17,15 +17,15 @@ func NewTestSecretManager() *TestSecretManager {
 	}
 }
 
-func (m *TestSecretManager) Create(id string, payload []byte) (string, error) {
-	m.keystores[id] = payload
-	return "", nil
+func (m *TestSecretManager) Create(sid types.SecretID, payload []byte) error {
+	m.keystores[sid.ID()] = payload
+	return nil
 }
 
-func (m *TestSecretManager) Get(id string) ([]byte, error) {
-	rawKey, found := m.keystores[id]
+func (m *TestSecretManager) Get(sid types.SecretID) ([]byte, error) {
+	rawKey, found := m.keystores[sid.ID()]
 	if !found {
-		return nil, fmt.Errorf("key %s not found", id)
+		return nil, fmt.Errorf("key %s not found", sid.ID())
 	}
 	return rawKey, nil
 }
