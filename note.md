@@ -16,6 +16,7 @@
 - [x] implement Ethereum signer
 - [x] ethereum signer unit tests
 - [x] deploy scripts
+- [ ] Sign all transactions
 - [ ] CI
 - [ ] parse SignerRequest in `/internal/server/api/rest.go#42`
 - [ ] setting IAM
