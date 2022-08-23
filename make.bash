@@ -19,6 +19,8 @@ function usage {
     echo "Avareum's fund operation signing modules"
     echo ""
     echo "Commands:"
+    echo "  build                   local build"
+    echo "  run                     start local docker container"
     echo "  gcp:build               build the project and store on gcp artifact"
     echo "  gcp:deploy              deploy on a new gcp cloud compute"
     echo "Tests:"

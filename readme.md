@@ -4,6 +4,20 @@ Avareum fund operation signing modules
 
 See: [Notes](/note.md)
 
+## Run
+
+1. Prepare `GOOGLE_APPLICATION_CREDENTIALS` in `.env`
+2. Run using these methods
+
+   2.1. Run using VSCode by `Run and Debug` -> `SignerApp`
+
+   2.2. Run using docker container
+
+```
+$ ./make.bash build
+$ ./make.bash run
+```
+
 ## Example: App signer sequence diagram
 
 ```mermaid
