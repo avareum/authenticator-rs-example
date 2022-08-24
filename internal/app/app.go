@@ -22,12 +22,14 @@ func NewAppSigner() *AppSigner {
 	return a
 }
 
-func (a *AppSigner) RegisterSecretManager(sm smTypes.SecretManager) {
+func (a *AppSigner) WithSecretManager(sm smTypes.SecretManager) *AppSigner {
 	a.sm = sm
+	return a
 }
 
-func (a *AppSigner) RegisterACL(acl aclTypes.ACL) {
+func (a *AppSigner) WithACL(acl aclTypes.ACL) *AppSigner {
 	a.acl = acl
+	return a
 }
 
 func (a *AppSigner) AddSigners(signers ...signerTypes.Signer) error {

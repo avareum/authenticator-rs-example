@@ -40,7 +40,7 @@ func (m *SolanaTestSuite) FaucetTo(to solana.PublicKey) {
 	utils.WaitSolanaTxConfirmed(m.client, sig)
 }
 
-func (m *SolanaTestSuite) NewTx(ixs ...solana.Instruction) *solana.Transaction {
+func (m *SolanaTestSuite) NewTx(payer solana.PublicKey, ixs ...solana.Instruction) *solana.Transaction {
 	recent, err := m.client.GetRecentBlockhash(context.TODO(), rpc.CommitmentFinalized)
 	if err != nil {
 		log.Fatal(err)
@@ -48,7 +48,7 @@ func (m *SolanaTestSuite) NewTx(ixs ...solana.Instruction) *solana.Transaction {
 	tx, _ := solana.NewTransaction(
 		ixs,
 		recent.Value.Blockhash,
-		solana.TransactionPayer(m.Fund.PublicKey()),
+		solana.TransactionPayer(payer),
 	)
 	return tx
 }

@@ -4,16 +4,16 @@ import "fmt"
 
 type Chain struct {
 	name    string
-	cluster string
+	chainID string
 }
 
-func NewChain(name string, cluster string) Chain {
+func NewChain(name string, chainID string) Chain {
 	return Chain{
 		name:    name,
-		cluster: cluster,
+		chainID: chainID,
 	}
 }
 
 func (c Chain) ID() string {
-	return fmt.Sprintf("%s.%s", c.name, c.cluster)
+	return fmt.Sprintf("%s.%s", c.name, c.chainID)
 }

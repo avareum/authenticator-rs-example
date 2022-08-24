@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/base64"
 	"net/http"
 
 	"github.com/avareum/avareum-hubble-signer/internal/server/wallet"
@@ -29,7 +30,7 @@ func NewRestHandler() IRestHandler {
 // @BasePath 	/v1
 // @Summary 	Create a new wallet
 // @Description Create & store a new wallet of the given chain and cluster
-// @Accept 		json
+// @Accept 		mpfd
 // @Produce 	json
 // @Param 		chain path string required "Chain name"
 // @Param 		chain_id path string required "Chain id"
@@ -53,7 +54,7 @@ func (r *RestHandler) NewWallet(c *gin.Context) {
 // @BasePath 	/v1
 // @Summary 	Execute a wallet
 // @Description Execute a payload with the given wallet
-// @Accept  	json
+// @Accept  	mpfd
 // @Produce  	json
 // @Param 		chain path string required "Target chain name"
 // @Param 		chain_id path string required "Target chain id"
@@ -65,14 +66,32 @@ func (r *RestHandler) NewWallet(c *gin.Context) {
 // @Router 	/{chain}/{chain_id}/{wallet}/execute [post]
 func (r *RestHandler) Execute(c *gin.Context) {
 	chain := types.NewChain(c.Param("chain"), c.Param("chain_id"))
+	payload, err := base64.StdEncoding.DecodeString(c.PostForm("payload"))
+	if err != nil {
+		logger.Default.Err(err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": "FAILED",
+			"error":  "decode payload failed",
+		})
+		return
+	}
+	signature, err := base64.StdEncoding.DecodeString(c.PostForm("signature"))
+	if err != nil {
+		logger.Default.Err(err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": "FAILED",
+			"error":  "decode payload signature failed",
+		})
+		return
+	}
 	request := wallet.ExecuteWalletRequest{
 		Chain: chain,
 		SignerRequest: signertypes.SignerRequest{
 			Chain:     chain,
 			Wallet:    c.Param("wallet"),
 			Caller:    c.PostForm("caller"),
-			Payload:   []byte(c.PostForm("payload")),
-			Signature: []byte(c.PostForm("signature")),
+			Payload:   payload,
+			Signature: signature,
 		},
 	}
 	res, err := r.walletHandler.Execute(request)

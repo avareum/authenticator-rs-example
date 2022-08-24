@@ -24,7 +24,7 @@ const docTemplate = `{
             "post": {
                 "description": "Create \u0026 store a new wallet of the given chain and cluster",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -60,7 +60,7 @@ const docTemplate = `{
             "post": {
                 "description": "Execute a payload with the given wallet",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -148,10 +148,10 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "",
-	BasePath:         "/",
+	BasePath:         "/v1",
 	Schemes:          []string{},
 	Title:            "Signer API",
-	Description:      "Avareum fund operation signer APIs.",
+	Description:      "Avareum fund operation signing APIs.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

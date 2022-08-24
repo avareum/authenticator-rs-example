@@ -2,9 +2,10 @@ package acl
 
 import (
 	"crypto/ed25519"
-	"log"
+	"fmt"
 
 	"github.com/avareum/avareum-hubble-signer/pkg/acl/types"
+	"github.com/avareum/avareum-hubble-signer/pkg/logger"
 	"github.com/avareum/avareum-hubble-signer/pkg/secret_manager"
 	smtypes "github.com/avareum/avareum-hubble-signer/pkg/secret_manager/types"
 	"github.com/gagliardetto/solana-go"
@@ -73,7 +74,7 @@ func (w *ServiceACL) Verify(pub ed25519.PublicKey, payload []byte, payloadSignat
 func (w *ServiceACL) CanCall(serviceName string, payload []byte, payloadSignature []byte) bool {
 	pubBytes := w.getServiceKey(serviceName)
 	if len(pubBytes) == 0 {
-		log.Println("error: service key not found")
+		logger.Default.Err(fmt.Errorf("service %s not found", serviceName))
 		return false
 	}
 	pub := solana.PublicKeyFromBytes(pubBytes)

@@ -15,9 +15,10 @@ func Test_SolanaTransactionDecoder(t *testing.T) {
 		suite := fixtures.NewTestSuite()
 		decoder := NewSolanaTransactionDecoder()
 		receiver := solana.NewWallet()
-		originalTx := suite.Solana.NewTx(system.NewTransferInstruction(
+		fund := suite.Solana.Fund.PublicKey()
+		originalTx := suite.Solana.NewTx(fund, system.NewTransferInstruction(
 			100000,
-			suite.Solana.Fund.PublicKey(),
+			fund,
 			receiver.PublicKey(),
 		).Build())
 

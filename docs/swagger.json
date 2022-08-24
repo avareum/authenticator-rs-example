@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Avareum fund operation signer APIs.",
+        "description": "Avareum fund operation signing APIs.",
         "title": "Signer API",
         "contact": {},
         "license": {
@@ -10,13 +10,13 @@
         },
         "version": "1.0"
     },
-    "basePath": "/",
+    "basePath": "/v1",
     "paths": {
         "/{chain}/{chain_id}/wallet/new": {
             "post": {
                 "description": "Create \u0026 store a new wallet of the given chain and cluster",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -52,7 +52,7 @@
             "post": {
                 "description": "Execute a payload with the given wallet",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"

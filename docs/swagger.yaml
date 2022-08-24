@@ -1,4 +1,4 @@
-basePath: /
+basePath: /v1
 definitions:
   wallet.ExecuteWalletResponse:
     properties:
@@ -14,7 +14,7 @@ definitions:
     type: object
 info:
   contact: {}
-  description: Avareum fund operation signer APIs.
+  description: Avareum fund operation signing APIs.
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -24,7 +24,7 @@ paths:
   /{chain}/{chain_id}/{wallet}/execute:
     post:
       consumes:
-      - application/json
+      - multipart/form-data
       description: Execute a payload with the given wallet
       parameters:
       - description: Target chain name
@@ -68,7 +68,7 @@ paths:
   /{chain}/{chain_id}/wallet/new:
     post:
       consumes:
-      - application/json
+      - multipart/form-data
       description: Create & store a new wallet of the given chain and cluster
       parameters:
       - description: Chain name

@@ -69,7 +69,7 @@ func (f *FundWalletHandler) NewWallet(req NewWalletRequest) (*NewWalletResponse,
 		}
 		priv = crypto.FromECDSA(ethKey)
 		wallet = crypto.PubkeyToAddress(ethKey.PublicKey).Hex()
-	case constant.SolanaMainnetBeta.ID():
+	case constant.SolanaMainnetBeta.ID(), constant.SolanaDevnet.ID():
 		solanaKey, err := solanalib.NewRandomPrivateKey()
 		if err != nil {
 			return nil, err
@@ -97,15 +97,21 @@ func (f *FundWalletHandler) Execute(req ExecuteWalletRequest) (*ExecuteWalletRes
 	if err != nil {
 		return nil, err
 	}
-	app := app.NewAppSigner()
-	app.RegisterACL(acl)
-	app.RegisterSecretManager(sm)
+	app := app.NewAppSigner().WithSecretManager(sm).WithACL(acl)
 	err = app.AddSigners(
+		// mainnet chains
 		ethereum.NewEthereumSigner(ethereum.EthereumSignerOptions{
-			RPC: os.Getenv("ETHEREUM_ENDPOINT"),
+			RPC:   os.Getenv("ETHEREUM_MAINNET_ENDPOINT"),
+			Chain: types.NewChain("ethereum", "1"),
 		}),
 		solana.NewSolanaSigner(solana.SolanaSignerOptions{
-			RPC: os.Getenv("SOLANA_ENDPOINT"),
+			RPC:   os.Getenv("SOLANA_MAINNETBETA_ENDPOINT"),
+			Chain: types.NewChain("solana", "mainnet-beta"),
+		}),
+		// devnet chains
+		solana.NewSolanaSigner(solana.SolanaSignerOptions{
+			RPC:   os.Getenv("SOLANA_DEVNET_ENDPOINT"),
+			Chain: types.NewChain("solana", "devnet"),
 		}),
 	)
 	if err != nil {

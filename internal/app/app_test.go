@@ -16,9 +16,10 @@ import (
 
 func NewTestTxPayload(suite *fixtures.TestSuite) []byte {
 	receiver := solanalib.NewWallet()
-	originalTx := suite.Solana.NewTx(system.NewTransferInstruction(
+	fund := suite.Solana.Fund.PublicKey()
+	originalTx := suite.Solana.NewTx(fund, system.NewTransferInstruction(
 		1*solanalib.LAMPORTS_PER_SOL,
-		suite.Solana.Fund.PublicKey(),
+		fund,
 		receiver.PublicKey(),
 	).Build())
 	payload, err := originalTx.Message.MarshalBinary()
@@ -40,8 +41,7 @@ func Test_App(t *testing.T) {
 	t.Run("should reject invalid signer id requested", func(t *testing.T) {
 		suite := fixtures.NewTestSuite()
 
-		app := NewAppSigner()
-		app.RegisterSecretManager(suite.SecretManager)
+		app := NewAppSigner().WithSecretManager(suite.SecretManager)
 		_, err := app.TrySign(context.TODO(), signerTypes.SignerRequest{
 			Chain:     types.NewChain("solono", "mainnet-beta"),
 			Caller:    "",
@@ -63,9 +63,7 @@ func Test_App(t *testing.T) {
 		mismatchSignature, err := suite.ACL.SignPayload("unauthorize-service", payload)
 		require.Nil(t, err)
 
-		app := NewAppSigner()
-		app.RegisterSecretManager(suite.SecretManager)
-		app.RegisterACL(suite.ACL)
+		app := NewAppSigner().WithSecretManager(suite.SecretManager).WithACL(suite.ACL)
 		_, err = app.TrySign(context.TODO(), signerTypes.SignerRequest{
 			Chain:     types.NewChain("solana", "mainnet-beta"),
 			Caller:    "caller-service",
@@ -94,17 +92,16 @@ func Test_App(t *testing.T) {
 		payloadSignature, err := suite.ACL.SignPayload("caller-service", payload)
 		require.Nil(t, err)
 
-		app := NewAppSigner()
-		app.RegisterSecretManager(suite.SecretManager)
-		app.RegisterACL(suite.ACL)
+		app := NewAppSigner().WithSecretManager(suite.SecretManager).WithACL(suite.ACL)
 		err = app.AddSigners(solana.NewSolanaSigner(solana.SolanaSignerOptions{
-			RPC: "http://127.0.0.1:8899",
+			RPC:   "http://127.0.0.1:8899",
+			Chain: types.NewChain("solana", "localnet"),
 		}))
 		require.Nil(t, err)
 
 		// start long running receiving, signing, and broadcasting
 		response, err := app.TrySign(context.TODO(), signerTypes.SignerRequest{
-			Chain:     types.NewChain("solana", "mainnet-beta"),
+			Chain:     types.NewChain("solana", "localnet"),
 			Caller:    "caller-service",
 			Wallet:    suite.Solana.Fund.PublicKey().String(),
 			Payload:   payload,

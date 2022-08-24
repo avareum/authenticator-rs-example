@@ -3,7 +3,6 @@ package solana
 import (
 	"context"
 
-	"github.com/avareum/avareum-hubble-signer/internal/constant"
 	"github.com/avareum/avareum-hubble-signer/internal/signers"
 	signertypes "github.com/avareum/avareum-hubble-signer/internal/signers/types"
 	"github.com/avareum/avareum-hubble-signer/internal/types"
@@ -20,7 +19,8 @@ type SolanaSigner struct {
 }
 
 type SolanaSignerOptions struct {
-	RPC string
+	RPC   string
+	Chain types.Chain
 }
 
 // Signer implementation checked against internal/signers/types/signer.go
@@ -36,7 +36,7 @@ func NewSolanaSigner(opt SolanaSignerOptions) *SolanaSigner {
 
 // Chain returns the signer's chain
 func (s *SolanaSigner) Chain() types.Chain {
-	return constant.SolanaMainnetBeta
+	return s.opt.Chain
 }
 
 // Init create a new rpc & websocket client (used for confirming transactions)

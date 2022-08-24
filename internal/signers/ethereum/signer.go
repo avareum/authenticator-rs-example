@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 
-	"github.com/avareum/avareum-hubble-signer/internal/constant"
 	"github.com/avareum/avareum-hubble-signer/internal/signers"
 	signertypes "github.com/avareum/avareum-hubble-signer/internal/signers/types"
 	"github.com/avareum/avareum-hubble-signer/internal/types"
@@ -21,7 +20,8 @@ type EthereumSigner struct {
 }
 
 type EthereumSignerOptions struct {
-	RPC string
+	RPC   string
+	Chain types.Chain
 }
 
 // Signer implementation checked against internal/signers/types/signer.go
@@ -37,7 +37,7 @@ func NewEthereumSigner(opt EthereumSignerOptions) *EthereumSigner {
 
 // Chain returns the signer's chain
 func (s *EthereumSigner) Chain() types.Chain {
-	return constant.EthereumMainnet
+	return s.opt.Chain
 }
 
 // Init create a new rpc client

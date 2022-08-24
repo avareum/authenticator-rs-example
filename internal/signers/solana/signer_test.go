@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/avareum/avareum-hubble-signer/internal/types"
 	"github.com/avareum/avareum-hubble-signer/tests/fixtures"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/system"
@@ -12,7 +13,8 @@ import (
 
 func NewTestSigner() *SolanaSigner {
 	s := NewSolanaSigner(SolanaSignerOptions{
-		RPC: "http://127.0.0.1:8899",
+		RPC:   "http://127.0.0.1:8899",
+		Chain: types.Chain{},
 	})
 	s.Init()
 	return s
@@ -23,9 +25,10 @@ func Test_SolanaSigner(t *testing.T) {
 		suite := fixtures.NewTestSuite()
 		signer := NewTestSigner()
 		receiver := solana.NewWallet()
-		originalTx := suite.Solana.NewTx(system.NewTransferInstruction(
+		fund := suite.Solana.Fund.PublicKey()
+		originalTx := suite.Solana.NewTx(fund, system.NewTransferInstruction(
 			100000,
-			suite.Solana.Fund.PublicKey(),
+			fund,
 			receiver.PublicKey(),
 		).Build())
 

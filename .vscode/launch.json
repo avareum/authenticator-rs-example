@@ -12,6 +12,13 @@
       "preLaunchTask": "GenSwagger",
       "envFile": "${workspaceFolder}/.env",
       "program": "${workspaceFolder}/http/main.go"
+    },
+    {
+      "name": "SignerApp_GenPayload",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/tests/gen.go"
     }
   ]
 }
