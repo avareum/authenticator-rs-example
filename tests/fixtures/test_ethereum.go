@@ -43,7 +43,7 @@ func (e *EthereumTestSuite) Init() error {
 }
 
 func (e *EthereumTestSuite) FaucetTo(to ecdsa.PublicKey) {
-	tx := e.NewTransferTransaction(*e.coinbase, to, 10)
+	tx := e.NewTransferTransaction(crypto.PubkeyToAddress(e.coinbase.PublicKey), crypto.PubkeyToAddress(to), 10)
 	signedTx, err := ethtypes.SignTx(tx, ethtypes.HomesteadSigner{}, e.coinbase)
 	if err != nil {
 		log.Fatal(err)
@@ -61,19 +61,21 @@ func (e *EthereumTestSuite) TransactionReceipt(hash common.Hash) (*ethtypes.Rece
 	return e.client.TransactionReceipt(context.Background(), hash)
 }
 
-func (e *EthereumTestSuite) NewTransferTransaction(from ecdsa.PrivateKey, to ecdsa.PublicKey, amount int64) *ethtypes.Transaction {
-	toAddress := crypto.PubkeyToAddress(to)
-	nonce, err := e.client.PendingNonceAt(context.Background(), crypto.PubkeyToAddress(from.PublicKey))
+func (e *EthereumTestSuite) NewTransferTransaction(from common.Address, to common.Address, amount float64) *ethtypes.Transaction {
+	nonce, err := e.client.PendingNonceAt(context.Background(), from)
 	if err != nil {
 		log.Fatal(err)
 	}
-	ethAmount := big.NewInt(amount)
-	weiValue := big.NewInt(1000000000000000000)
-	gasLimit := uint64(21000) // The gas limit for a standard ETH transfer is 21000 units.
-	gasPrice, err := e.client.SuggestGasPrice(context.Background())
-	if err != nil {
-		log.Fatal(err)
-	}
-	tx := ethtypes.NewTransaction(nonce, toAddress, ethAmount.Mul(ethAmount, weiValue), gasLimit, gasPrice, nil)
+
+	weiValue := big.NewFloat(1000000000000000000)
+	ethAmount := big.NewFloat(amount)
+	actualAmount, _ := ethAmount.Mul(ethAmount, weiValue).Int(nil)
+	tx := ethtypes.NewTx(&ethtypes.LegacyTx{
+		Nonce:    nonce,
+		To:       &to,
+		Gas:      uint64(21000),           // The gas limit for a standard ETH transfer is 21000 units.
+		GasPrice: big.NewInt(20000000000), // fix for test at 20 Gwei
+		Value:    actualAmount,
+	})
 	return tx
 }

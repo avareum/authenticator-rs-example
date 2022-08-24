@@ -14,7 +14,7 @@ func WaitSolanaTxConfirmed(client *rpc.Client, sig solana.Signature) {
 		if txMetadata != nil {
 			return
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(500 * time.Millisecond)
 		continue
 	}
 

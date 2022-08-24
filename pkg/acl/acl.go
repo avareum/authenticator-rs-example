@@ -78,5 +78,6 @@ func (w *ServiceACL) CanCall(serviceName string, payload []byte, payloadSignatur
 		return false
 	}
 	pub := solana.PublicKeyFromBytes(pubBytes)
+	logger.Default.Info("verifying service signature with public key:", pub.String())
 	return w.Verify(pub[:], payload, payloadSignature)
 }

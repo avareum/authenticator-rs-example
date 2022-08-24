@@ -9,6 +9,7 @@ import (
 	"github.com/avareum/avareum-hubble-signer/tests/fixtures"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/test-go/testify/require"
 )
 
@@ -24,7 +25,11 @@ func Test_EthereumTransactionDecoder(t *testing.T) {
 	decoder := NewEthereumTransactionDecoder()
 	sender := types.MustNewEthereumKey()
 	receiver := types.MustNewEthereumKey()
-	originalTx := suite.Ethereum.NewTransferTransaction(*sender, receiver.PublicKey, 1)
+	originalTx := suite.Ethereum.NewTransferTransaction(
+		crypto.PubkeyToAddress(sender.PublicKey),
+		crypto.PubkeyToAddress(receiver.PublicKey),
+		1,
+	)
 
 	t.Run("ethereum tx decoder", func(t *testing.T) {
 

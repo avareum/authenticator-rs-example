@@ -6,6 +6,7 @@ import (
 
 	"github.com/avareum/avareum-hubble-signer/internal/signers/ethereum/types"
 	"github.com/avareum/avareum-hubble-signer/tests/fixtures"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/test-go/testify/require"
 )
 
@@ -15,7 +16,11 @@ func Test_EthereumSigner(t *testing.T) {
 		signer := NewEthereumSigner(EthereumSignerOptions{})
 		sender := types.MustNewEthereumKey()
 		receiver := types.MustNewEthereumKey()
-		originalTx := suite.Ethereum.NewTransferTransaction(*sender, receiver.PublicKey, 1)
+		originalTx := suite.Ethereum.NewTransferTransaction(
+			crypto.PubkeyToAddress(sender.PublicKey),
+			crypto.PubkeyToAddress(receiver.PublicKey),
+			1,
+		)
 
 		t.Run("should sign relay tx", func(t *testing.T) {
 			signedTx, err := signer.sign(originalTx, sender)

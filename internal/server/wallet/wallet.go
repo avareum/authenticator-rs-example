@@ -62,7 +62,7 @@ func (f *FundWalletHandler) NewWallet(req NewWalletRequest) (*NewWalletResponse,
 	// Store raw key as a payload in secret manager.
 	// Label the secret with the prefix and wallet name which `WALLET_{wallet}`.
 	switch req.Chain.ID() {
-	case constant.EthereumMainnet.ID():
+	case constant.EthereumMainnet.ID(), constant.BSCTestnet.ID():
 		ethKey, err := ethtypes.NewEthereumKey()
 		if err != nil {
 			return nil, err
@@ -99,16 +99,11 @@ func (f *FundWalletHandler) Execute(req ExecuteWalletRequest) (*ExecuteWalletRes
 	}
 	app := app.NewAppSigner().WithSecretManager(sm).WithACL(acl)
 	err = app.AddSigners(
-		// mainnet chains
+		// devnet & testnet
 		ethereum.NewEthereumSigner(ethereum.EthereumSignerOptions{
-			RPC:   os.Getenv("ETHEREUM_MAINNET_ENDPOINT"),
-			Chain: types.NewChain("ethereum", "1"),
+			RPC:   os.Getenv("BSC_TESTNET_ENDPOINT"),
+			Chain: types.NewChain("bsc", "97"),
 		}),
-		solana.NewSolanaSigner(solana.SolanaSignerOptions{
-			RPC:   os.Getenv("SOLANA_MAINNETBETA_ENDPOINT"),
-			Chain: types.NewChain("solana", "mainnet-beta"),
-		}),
-		// devnet chains
 		solana.NewSolanaSigner(solana.SolanaSignerOptions{
 			RPC:   os.Getenv("SOLANA_DEVNET_ENDPOINT"),
 			Chain: types.NewChain("solana", "devnet"),
