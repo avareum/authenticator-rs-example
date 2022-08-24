@@ -56,14 +56,14 @@ func main() {
 	solanaTransferPayloadSignature := suite.ACL.MustSignPayloadWithKey(servicePriv, solanaTransferPayload)
 	fmt.Println("Wallet:", solanaFund.String())
 	fmt.Println("Payload (base64):", base64.StdEncoding.EncodeToString(solanaTransferPayload))
-	fmt.Println("Payload signature (base64):", base64.StdEncoding.EncodeToString(solanaTransferPayloadSignature))
+	fmt.Println("Payload signature (base58):", solanaTransferPayloadSignature)
 
 	fmt.Println("BSC")
 	bscTransferPayload := NewEvmTestPayload(suite)
 	bscTransferPayloadSignature := suite.ACL.MustSignPayloadWithKey(servicePriv, bscTransferPayload)
 	fmt.Println("Wallet:", bscFund.Hex())
 	fmt.Println("Payload (base64):", base64.StdEncoding.EncodeToString(bscTransferPayload))
-	fmt.Println("Payload signature (base64):", base64.StdEncoding.EncodeToString(bscTransferPayloadSignature))
+	fmt.Println("Payload signature (base58):", bscTransferPayloadSignature)
 
 }
 

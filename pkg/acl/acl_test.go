@@ -24,7 +24,7 @@ func Test_SignatureVerification(t *testing.T) {
 
 		type VerifyTestCase struct {
 			signer    solana.PublicKey
-			signature []byte
+			signature string
 			payload   []byte
 			expect    bool
 		}
@@ -57,7 +57,8 @@ func Test_SignatureVerification(t *testing.T) {
 		}
 
 		for _, test := range tests {
-			require.Equal(t, test.expect, acl.Verify(test.signer[:], test.payload, test.signature))
+			signature := solana.MustSignatureFromBase58(test.signature)
+			require.Equal(t, test.expect, acl.Verify(test.signer[:], test.payload, signature[:]))
 		}
 	})
 
@@ -69,7 +70,7 @@ func Test_SignatureVerification(t *testing.T) {
 
 		type CanCallTestCase struct {
 			service   string
-			signature []byte
+			signature string
 			payload   []byte
 			expect    bool
 		}
@@ -110,9 +111,20 @@ func Test_SignatureVerification(t *testing.T) {
 		}
 
 		for _, test := range tests {
-			require.Nil(t, err)
-			require.Equal(t, test.expect, acl.CanCall(test.service, test.payload, test.signature))
+			signature := solana.MustSignatureFromBase58(test.signature)
+			require.Equal(t, test.expect, acl.CanCall(test.service, test.payload, signature[:]))
 		}
+	})
+
+}
+
+func Test_SignatureVerification2(t *testing.T) {
+
+	t.Run("should verify signature", func(t *testing.T) {
+		signerPub := solana.MustPublicKeyFromBase58("48oeRt6qvLpDrxwnjcooCSCYXvY1Wj5eYztBeqw938jg")
+		payload := []byte(`{"method":"eth_call","params":[{"from":"0x407d73d8a49eeb85d32cf465507dd71d507100c1","to":"0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b","value":"0x186a0"}],"id":1,"jsonrpc":"2.0"}`)
+		payloadSignature := solana.MustSignatureFromBase58("5SeDH1KWhMcvART54uzCX38DaxVMjkWtwNfaxYL1F1XELKxi4yVxrjKLpskJfBhWsqPsMbQqrTFCtW3AnF9JxP6f")
+		require.Equal(t, true, ed25519.Verify(signerPub[:], payload, payloadSignature[:]))
 	})
 
 }

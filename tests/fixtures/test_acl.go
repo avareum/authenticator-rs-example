@@ -31,12 +31,12 @@ func (a *TestACL) SignPayload(serviceName string, payload []byte) ([]byte, error
 	return a.SignPayloadWithKey(ed25519.PrivateKey(priv), payload)
 }
 
-func (a *TestACL) MustSignPayloadWithKey(p ed25519.PrivateKey, payload []byte) []byte {
+func (a *TestACL) MustSignPayloadWithKey(p ed25519.PrivateKey, payload []byte) string {
 	signData, err := p.Sign(rand.Reader, payload, crypto.Hash(0))
 	if err != nil {
 		panic(err)
 	}
-	return signData
+	return solana.SignatureFromBytes(signData).String()
 }
 
 func (a *TestACL) SignPayloadWithKey(p ed25519.PrivateKey, payload []byte) ([]byte, error) {
