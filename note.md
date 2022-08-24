@@ -17,6 +17,8 @@
 - [x] ethereum signer unit tests
 - [x] deploy scripts
 - [ ] Sign all transactions
+- [ ] bsc signer
+- [ ] list support rpc(s)
 - [ ] CI
 - [ ] parse SignerRequest in `/internal/server/api/rest.go#42`
 - [ ] setting IAM

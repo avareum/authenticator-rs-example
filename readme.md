@@ -18,6 +18,8 @@ $ ./make.bash build
 $ ./make.bash run
 ```
 
+3. Access swagger API docs on `http://localhost:8080/swagger/index.html`
+
 ## Example: App signer sequence diagram
 
 ```mermaid
