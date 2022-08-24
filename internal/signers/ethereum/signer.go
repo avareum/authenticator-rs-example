@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 
-	"github.com/avareum/avareum-hubble-signer/constant"
+	"github.com/avareum/avareum-hubble-signer/internal/constant"
 	"github.com/avareum/avareum-hubble-signer/internal/signers"
 	signertypes "github.com/avareum/avareum-hubble-signer/internal/signers/types"
 	"github.com/avareum/avareum-hubble-signer/internal/types"

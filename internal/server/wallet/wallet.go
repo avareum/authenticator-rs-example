@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/avareum/avareum-hubble-signer/constant"
 	"github.com/avareum/avareum-hubble-signer/internal/app"
+	"github.com/avareum/avareum-hubble-signer/internal/constant"
 	"github.com/avareum/avareum-hubble-signer/internal/signers/ethereum"
 	ethtypes "github.com/avareum/avareum-hubble-signer/internal/signers/ethereum/types"
 	"github.com/avareum/avareum-hubble-signer/internal/signers/solana"
