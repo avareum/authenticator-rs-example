@@ -2,6 +2,7 @@ package wallet
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"os"
 
@@ -21,7 +22,7 @@ import (
 
 type WalletHandler interface {
 	NewWallet(req NewWalletRequest) (*NewWalletResponse, error)
-	Execute(req ExecuteWalletRequest) (*ExecuteWalletResponse, error)
+	Execute(chain string, chainID string, wallet string, req ExecuteWalletRequest) (*ExecuteWalletResponse, error)
 }
 
 type NewWalletRequest struct {
@@ -33,8 +34,9 @@ type NewWalletResponse struct {
 }
 
 type ExecuteWalletRequest struct {
-	Chain         types.Chain
-	SignerRequest signertypes.SignerRequest `json:"signer_request"`
+	Caller    string `json:"caller"`
+	Payload   string `json:"payload"`
+	Signature string `json:"signature"`
 }
 
 type ExecuteWalletResponse struct {
@@ -88,7 +90,7 @@ func (f *FundWalletHandler) NewWallet(req NewWalletRequest) (*NewWalletResponse,
 	}, nil
 }
 
-func (f *FundWalletHandler) Execute(req ExecuteWalletRequest) (*ExecuteWalletResponse, error) {
+func (f *FundWalletHandler) Execute(chain string, chainID string, wallet string, req ExecuteWalletRequest) (*ExecuteWalletResponse, error) {
 	sm, err := secret_manager.NewGCPSecretManager()
 	if err != nil {
 		return nil, err
@@ -112,7 +114,21 @@ func (f *FundWalletHandler) Execute(req ExecuteWalletRequest) (*ExecuteWalletRes
 	if err != nil {
 		return nil, err
 	}
-	res, err := app.TrySign(context.TODO(), req.SignerRequest)
+	payload, err := base64.StdEncoding.DecodeString(req.Payload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode payload")
+	}
+	signature, err := base64.StdEncoding.DecodeString(req.Signature)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode payload signature")
+	}
+	res, err := app.TrySign(context.TODO(), signertypes.SignerRequest{
+		Chain:     types.NewChain(chain, chainID),
+		Wallet:    wallet,
+		Caller:    req.Caller,
+		Payload:   payload,
+		Signature: signature,
+	})
 	if err != nil {
 		return nil, err
 	}

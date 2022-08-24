@@ -24,7 +24,7 @@ const docTemplate = `{
             "post": {
                 "description": "Create \u0026 store a new wallet of the given chain and cluster",
                 "consumes": [
-                    "multipart/form-data"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -60,7 +60,7 @@ const docTemplate = `{
             "post": {
                 "description": "Execute a payload with the given wallet",
                 "consumes": [
-                    "multipart/form-data"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -89,25 +89,13 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "Caller service name",
-                        "name": "caller",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Transaction payload",
-                        "name": "payload",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Tranasction payload signature",
-                        "name": "signature",
-                        "in": "formData",
-                        "required": true
+                        "description": "Request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/wallet.ExecuteWalletRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -122,6 +110,20 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "wallet.ExecuteWalletRequest": {
+            "type": "object",
+            "properties": {
+                "caller": {
+                    "type": "string"
+                },
+                "payload": {
+                    "type": "string"
+                },
+                "signature": {
+                    "type": "string"
+                }
+            }
+        },
         "wallet.ExecuteWalletResponse": {
             "type": "object",
             "properties": {

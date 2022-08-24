@@ -1,5 +1,14 @@
 basePath: /v1
 definitions:
+  wallet.ExecuteWalletRequest:
+    properties:
+      caller:
+        type: string
+      payload:
+        type: string
+      signature:
+        type: string
+    type: object
   wallet.ExecuteWalletResponse:
     properties:
       signatures:
@@ -24,7 +33,7 @@ paths:
   /{chain}/{chain_id}/{wallet}/execute:
     post:
       consumes:
-      - multipart/form-data
+      - application/json
       description: Execute a payload with the given wallet
       parameters:
       - description: Target chain name
@@ -42,21 +51,12 @@ paths:
         name: wallet
         required: true
         type: string
-      - description: Caller service name
-        in: formData
-        name: caller
+      - description: Request body
+        in: body
+        name: request
         required: true
-        type: string
-      - description: Transaction payload
-        in: formData
-        name: payload
-        required: true
-        type: string
-      - description: Tranasction payload signature
-        in: formData
-        name: signature
-        required: true
-        type: string
+        schema:
+          $ref: '#/definitions/wallet.ExecuteWalletRequest'
       produces:
       - application/json
       responses:
@@ -68,7 +68,7 @@ paths:
   /{chain}/{chain_id}/wallet/new:
     post:
       consumes:
-      - multipart/form-data
+      - application/json
       description: Create & store a new wallet of the given chain and cluster
       parameters:
       - description: Chain name

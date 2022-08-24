@@ -1,15 +1,12 @@
 package api
 
 import (
-	"encoding/base64"
 	"net/http"
 
 	"github.com/avareum/avareum-hubble-signer/internal/server/wallet"
 	"github.com/avareum/avareum-hubble-signer/internal/types"
 	"github.com/avareum/avareum-hubble-signer/pkg/logger"
 	"github.com/gin-gonic/gin"
-
-	signertypes "github.com/avareum/avareum-hubble-signer/internal/signers/types"
 )
 
 type IRestHandler interface {
@@ -30,7 +27,7 @@ func NewRestHandler() IRestHandler {
 // @BasePath 	/v1
 // @Summary 	Create a new wallet
 // @Description Create & store a new wallet of the given chain and cluster
-// @Accept 		mpfd
+// @Accept 		json
 // @Produce 	json
 // @Param 		chain path string required "Chain name"
 // @Param 		chain_id path string required "Chain id"
@@ -54,47 +51,31 @@ func (r *RestHandler) NewWallet(c *gin.Context) {
 // @BasePath 	/v1
 // @Summary 	Execute a wallet
 // @Description Execute a payload with the given wallet
-// @Accept  	mpfd
+// @Accept  	json
 // @Produce  	json
 // @Param 		chain path string required "Target chain name"
 // @Param 		chain_id path string required "Target chain id"
 // @Param 		wallet path string required "Target fund wallet address"
-// @Param 		caller formData string required "Caller service name"
-// @Param 		payload formData string required "Transaction payload"
-// @Param 		signature formData string required "Tranasction payload signature"
+// @Param 		request body wallet.ExecuteWalletRequest required "Request body"
 // @Success 	200 {object} wallet.ExecuteWalletResponse
 // @Router 	/{chain}/{chain_id}/{wallet}/execute [post]
 func (r *RestHandler) Execute(c *gin.Context) {
-	chain := types.NewChain(c.Param("chain"), c.Param("chain_id"))
-	payload, err := base64.StdEncoding.DecodeString(c.PostForm("payload"))
+	var requestBody wallet.ExecuteWalletRequest
+	err := c.BindJSON(&requestBody)
 	if err != nil {
 		logger.Default.Err(err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": "FAILED",
-			"error":  "decode payload failed",
+			"error":  "invalid request body",
 		})
 		return
 	}
-	signature, err := base64.StdEncoding.DecodeString(c.PostForm("signature"))
-	if err != nil {
-		logger.Default.Err(err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status": "FAILED",
-			"error":  "decode payload signature failed",
-		})
-		return
-	}
-	request := wallet.ExecuteWalletRequest{
-		Chain: chain,
-		SignerRequest: signertypes.SignerRequest{
-			Chain:     chain,
-			Wallet:    c.Param("wallet"),
-			Caller:    c.PostForm("caller"),
-			Payload:   payload,
-			Signature: signature,
-		},
-	}
-	res, err := r.walletHandler.Execute(request)
+	res, err := r.walletHandler.Execute(
+		c.Param("chain"),
+		c.Param("chain_id"),
+		c.Param("wallet"),
+		requestBody,
+	)
 	if err != nil {
 		logger.Default.Err(err)
 		c.JSON(http.StatusInternalServerError, gin.H{
