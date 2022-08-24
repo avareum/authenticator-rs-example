@@ -66,8 +66,12 @@ func (s *SolanaSigner) SignAndBroadcast(ctx context.Context, req signertypes.Sig
 		return nil, err
 	}
 	signature, err := s.rpcclient.SendTransaction(ctx, tx)
+	if err != nil {
+		return nil, err
+	}
+
 	utils.WaitSolanaTxConfirmed(s.rpcclient, signature)
-	return []string{signature.String()}, err
+	return []string{signature.String()}, nil
 }
 
 /*
