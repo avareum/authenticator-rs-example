@@ -33,8 +33,8 @@ type NewWalletResponse struct {
 }
 
 type ExecuteWalletRequest struct {
-	Chain          types.Chain
-	SigningRequest signertypes.SignerRequest `json:"signing_request"`
+	Chain         types.Chain
+	SignerRequest signertypes.SignerRequest `json:"signer_request"`
 }
 
 type ExecuteWalletResponse struct {
@@ -43,36 +43,10 @@ type ExecuteWalletResponse struct {
 
 type FundWalletHandler struct {
 	WalletHandler
-	app *app.AppSigner
 }
 
-func NewFundWalletHandler() (WalletHandler, error) {
-	sm, err := secret_manager.NewGCPSecretManager()
-	if err != nil {
-		return nil, err
-	}
-	acl, err := acl.NewServiceACL()
-	if err != nil {
-		return nil, err
-	}
-
-	app := app.NewAppSigner()
-	app.RegisterACL(acl)
-	app.RegisterSecretManager(sm)
-	err = app.AddSigners(
-		ethereum.NewEthereumSigner(ethereum.EthereumSignerOptions{
-			RPC: os.Getenv("ETHEREUM_ENDPOINT"),
-		}),
-		solana.NewSolanaSigner(solana.SolanaSignerOptions{
-			RPC: os.Getenv("SOLANA_ENDPOINT"),
-		}),
-	)
-	if err != nil {
-		return nil, err
-	}
-	return &FundWalletHandler{
-		app: app,
-	}, err
+func NewFundWalletHandler() WalletHandler {
+	return &FundWalletHandler{}
 }
 
 func (f *FundWalletHandler) NewWallet(req NewWalletRequest) (*NewWalletResponse, error) {
@@ -115,7 +89,29 @@ func (f *FundWalletHandler) NewWallet(req NewWalletRequest) (*NewWalletResponse,
 }
 
 func (f *FundWalletHandler) Execute(req ExecuteWalletRequest) (*ExecuteWalletResponse, error) {
-	res, err := f.app.TrySign(context.TODO(), req.SigningRequest)
+	sm, err := secret_manager.NewGCPSecretManager()
+	if err != nil {
+		return nil, err
+	}
+	acl, err := acl.NewServiceACL()
+	if err != nil {
+		return nil, err
+	}
+	app := app.NewAppSigner()
+	app.RegisterACL(acl)
+	app.RegisterSecretManager(sm)
+	err = app.AddSigners(
+		ethereum.NewEthereumSigner(ethereum.EthereumSignerOptions{
+			RPC: os.Getenv("ETHEREUM_ENDPOINT"),
+		}),
+		solana.NewSolanaSigner(solana.SolanaSignerOptions{
+			RPC: os.Getenv("SOLANA_ENDPOINT"),
+		}),
+	)
+	if err != nil {
+		return nil, err
+	}
+	res, err := app.TrySign(context.TODO(), req.SignerRequest)
 	if err != nil {
 		return nil, err
 	}

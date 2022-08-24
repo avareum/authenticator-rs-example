@@ -3,10 +3,10 @@ package api
 import (
 	"net/http"
 
-	"github.com/avareum/avareum-hubble-signer/internal/server/wallet"
-	"github.com/avareum/avareum-hubble-signer/internal/types"
-	"github.com/avareum/avareum-hubble-signer/pkg/logger"
+	"github.com/avareum/avareum-hubble-signer/docs"
 	"github.com/gin-gonic/gin"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type RestAPI struct{}
@@ -15,13 +15,8 @@ func NewRestAPI() *RestAPI {
 	return &RestAPI{}
 }
 
-// Serve starts the simplest rest api server
 func (api *RestAPI) Serve() {
-	walletHandler, err := wallet.NewFundWalletHandler()
-	if err != nil {
-		panic(err)
-	}
-
+	handler := NewRestHandler()
 	r := gin.Default()
 	v1 := r.Group("/v1")
 	{
@@ -30,43 +25,12 @@ func (api *RestAPI) Serve() {
 				"status": "OK",
 			})
 		})
-
-		v1.POST("/:chain/:cluster/wallet/new", func(c *gin.Context) {
-			res, err := walletHandler.NewWallet(wallet.NewWalletRequest{
-				Chain: types.NewChain(c.Param("chain"), c.Param("cluster")),
-			})
-			if err != nil {
-				logger.Default.Err(err)
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"status": "FAILED",
-					"error":  "create new wallet failed",
-				})
-				return
-			}
-			c.JSON(http.StatusOK, gin.H{
-				"status":   "OK",
-				"response": res,
-			})
-		})
-
-		v1.POST("/:chain/:cluster/wallet/execute", func(c *gin.Context) {
-			// TODO: parse request body
-			res, err := walletHandler.Execute(wallet.ExecuteWalletRequest{
-				Chain: types.NewChain(c.Param("chain"), c.Param("cluster")),
-			})
-			if err != nil {
-				logger.Default.Err(err)
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"status": "FAILED",
-					"error":  "execute wallet failed",
-				})
-				return
-			}
-			c.JSON(http.StatusOK, gin.H{
-				"status":   "OK",
-				"response": res,
-			})
-		})
+		v1.POST("/:chain/:chain_id/wallet/new", handler.NewWallet)
+		v1.POST("/:chain/:chain_id/:wallet/execute", handler.Execute)
 	}
-	r.Run()
+
+	docs.SwaggerInfo.BasePath = "/v1"
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+
+	r.Run(":8080")
 }

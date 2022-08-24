@@ -9,6 +9,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
+      "preLaunchTask": "GenSwagger",
       "envFile": "${workspaceFolder}/.env",
       "program": "${workspaceFolder}/http/main.go"
     }

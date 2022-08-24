@@ -1,0 +1,92 @@
+basePath: /
+definitions:
+  wallet.ExecuteWalletResponse:
+    properties:
+      signatures:
+        items:
+          type: string
+        type: array
+    type: object
+  wallet.NewWalletResponse:
+    properties:
+      wallet:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Avareum fund operation signer APIs.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Signer API
+  version: "1.0"
+paths:
+  /{chain}/{chain_id}/{wallet}/execute:
+    post:
+      consumes:
+      - application/json
+      description: Execute a payload with the given wallet
+      parameters:
+      - description: Target chain name
+        in: path
+        name: chain
+        required: true
+        type: string
+      - description: Target chain id
+        in: path
+        name: chain_id
+        required: true
+        type: string
+      - description: Target fund wallet address
+        in: path
+        name: wallet
+        required: true
+        type: string
+      - description: Caller service name
+        in: formData
+        name: caller
+        required: true
+        type: string
+      - description: Transaction payload
+        in: formData
+        name: payload
+        required: true
+        type: string
+      - description: Tranasction payload signature
+        in: formData
+        name: signature
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wallet.ExecuteWalletResponse'
+      summary: Execute a wallet
+  /{chain}/{chain_id}/wallet/new:
+    post:
+      consumes:
+      - application/json
+      description: Create & store a new wallet of the given chain and cluster
+      parameters:
+      - description: Chain name
+        in: path
+        name: chain
+        required: true
+        type: string
+      - description: Chain id
+        in: path
+        name: chain_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wallet.NewWalletResponse'
+      summary: Create a new wallet
+swagger: "2.0"
